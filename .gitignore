@@ -3,3 +3,6 @@ __pycache__/
 ps4_companion/__pycache__/
 tests/__pycache__/
 *.pyc
+node_modules/
+data-v2/
+graphify-out/
