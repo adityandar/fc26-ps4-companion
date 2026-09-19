@@ -67,5 +67,5 @@ export function createApiServer(repository: SnapshotRepository, port = 4132, hos
       return json(res, 404, { error: 'not found' });
     } catch (error) { return json(res, 500, { error: error instanceof Error ? error.message : 'internal error' }); }
   });
-  return { server, listen: () => new Promise<string>((resolve) => server.listen(port, host, () => { const address = server.address(); const actualPort = typeof address === 'object' && address ? address.port : port; resolve(`http://${host}:${actualPort}`); })), close: () => server.close() };
+  return { server, listen: () => new Promise<string>((resolve, reject) => { const onError = (error: Error) => { server.off('listening', onListening); reject(error); }; const onListening = () => { server.off('error', onError); const address = server.address(); const actualPort = typeof address === 'object' && address ? address.port : port; resolve(`http://${host}:${actualPort}`); }; server.once('error', onError); server.once('listening', onListening); server.listen(port, host); }), close: () => server.close() };
 }
