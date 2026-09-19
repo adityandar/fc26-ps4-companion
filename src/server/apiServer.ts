@@ -10,6 +10,7 @@ import type { ImportPreview, ImportService } from '../import/importService.js';
 function json(res: ServerResponse, status: number, body: unknown): void {
   const data = JSON.stringify(body); res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'content-length': Buffer.byteLength(data) }); res.end(data);
 }
+function csvValue(value: unknown): string { const text = value === null || value === undefined ? '' : String(value); return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text; }
 
 async function requestJson(req: IncomingMessage): Promise<Record<string, unknown>> {
   const chunks: Buffer[] = [];
@@ -52,6 +53,8 @@ export function createApiServer(repository: SnapshotRepository, port = 4132, hos
       if (careerMatch) return json(res, 200, repository.listSnapshots(careerId(careerMatch[1])));
       const snapshotMatch = /^\/api\/snapshots\/([^/]+)$/.exec(url.pathname);
       if (snapshotMatch) { const found = repository.getSnapshot(snapshotId(snapshotMatch[1])); return found ? json(res, 200, found) : json(res, 404, { error: 'snapshot not found' }); }
+      const exportMatch = /^\/api\/snapshots\/([^/]+)\/export\.(json|csv)$/.exec(url.pathname);
+      if (exportMatch) { const found = repository.getSnapshot(snapshotId(exportMatch[1])); if (!found) return json(res, 404, { error: 'snapshot not found' }); if (exportMatch[2] === 'json') { const data = JSON.stringify(found, null, 2); res.writeHead(200, { 'content-type': 'application/json', 'content-disposition': `attachment; filename="${found.sourceFilename}.json"` }); return res.end(data); } const rows = [['player_id', 'name', 'name_source', 'position_codes', 'overall', 'potential', 'height_cm', 'contract_until', 'wage', 'jersey_number'], ...found.players.map((player) => [player.playerId, player.name.display, player.name.source, player.preferredPositions.join('|'), player.overall, player.potential, player.height, player.contractUntil, player.wage, player.jerseyNumber])]; const data = rows.map((row) => row.map(csvValue).join(',')).join('\n'); res.writeHead(200, { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': `attachment; filename="${found.sourceFilename}.csv"` }); return res.end(data); }
       if (url.pathname === '/api/compare') {
         const a = url.searchParams.get('a'); const b = url.searchParams.get('b');
         if (!a || !b) return json(res, 400, { error: 'a and b snapshot IDs are required' });
