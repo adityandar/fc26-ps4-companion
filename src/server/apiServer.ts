@@ -5,16 +5,40 @@ import type { SnapshotId } from '../domain/ids.js';
 import { careerId, snapshotId } from '../domain/ids.js';
 import { compareSnapshots, IncompatibleCareerError } from '../comparison/compareSnapshots.js';
 import type { SnapshotRepository } from '../store/snapshotRepository.js';
+import type { ImportPreview, ImportService } from '../import/importService.js';
 
 function json(res: ServerResponse, status: number, body: unknown): void {
   const data = JSON.stringify(body); res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'content-length': Buffer.byteLength(data) }); res.end(data);
 }
 
-export function createApiServer(repository: SnapshotRepository, port = 4132, host = '127.0.0.1', webRoot = join(process.cwd(), 'web-v2')) {
+async function requestJson(req: IncomingMessage): Promise<Record<string, unknown>> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of req) { chunks.push(Buffer.from(chunk)); if (Buffer.concat(chunks).length > 64 * 1024 * 1024) throw new Error('request exceeds 64 MiB limit'); }
+  return JSON.parse(Buffer.concat(chunks).toString('utf8')) as Record<string, unknown>;
+}
+
+export function createApiServer(repository: SnapshotRepository, port = 4132, host = '127.0.0.1', webRoot = join(process.cwd(), 'web-v2'), importer?: ImportService) {
+  const previews = new Map<string, ImportPreview>();
   const server = createServer((req, res) => {
     try {
       const url = new URL(req.url ?? '/', `http://${host}`);
-      if (req.method !== 'GET') return json(res, 405, { error: 'read-only route' });
+      if (req.method === 'POST' && importer && url.pathname === '/api/import/preview') return requestJson(req).then(async (body) => {
+        const filename = typeof body.filename === 'string' ? body.filename : 'DATA';
+        const encoded = typeof body.dataBase64 === 'string' ? body.dataBase64 : '';
+        if (!encoded) return json(res, 400, { error: 'dataBase64 is required' });
+        const preview = await importer.previewBytes(filename, Buffer.from(encoded, 'base64'));
+        const token = `${preview.staged.sourceSha256}-${Date.now()}`; previews.set(token, preview);
+        return json(res, 200, { token, sourceSha256: preview.staged.sourceSha256, copySha256: preview.staged.copySha256, sizeBytes: preview.staged.sizeBytes, sourceFilename: preview.staged.sourceFilename, careerHint: preview.careerHint, candidate: { managerName: preview.candidate.careerHint.managerName, clubName: preview.candidate.careerHint.clubName, players: preview.candidate.players.length, academyPlayers: preview.candidate.academyPlayers.length, estimatedGameDate: preview.candidate.estimatedGameDate, parsedSeasonIndex: preview.candidate.parsedSeasonIndex, warnings: preview.candidate.warnings } });
+      });
+      if (req.method === 'POST' && importer && url.pathname === '/api/import/commit') return requestJson(req).then((body) => {
+        const token = typeof body.token === 'string' ? body.token : ''; const preview = previews.get(token);
+        if (!preview) return json(res, 404, { error: 'preview expired or not found' });
+        const seasonLabel = typeof body.seasonLabel === 'string' ? body.seasonLabel : 'unknown'; const checkpoint = typeof body.checkpoint === 'string' ? body.checkpoint : 'custom';
+        const careerIdValue = typeof body.careerId === 'string' && body.careerId ? { kind: 'existing' as const, id: body.careerId as never } : { kind: 'new' as const, label: typeof body.careerLabel === 'string' && body.careerLabel ? body.careerLabel : preview.careerHint };
+        const snapshot = importer.commit(preview, careerIdValue, { seasonLabel, checkpoint, note: typeof body.note === 'string' ? body.note : undefined }); previews.delete(token);
+        return json(res, 201, { snapshotId: snapshot.id, careerId: snapshot.careerId, sourceSha256: snapshot.sourceSha256 });
+      });
+      if (req.method !== 'GET') return json(res, 405, { error: 'method not allowed' });
       if (url.pathname === '/' || url.pathname === '/index.html') {
         return readFile(join(webRoot, 'index.html')).then((data) => { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); res.end(data); }).catch(() => json(res, 404, { error: 'web ui not found' }));
       }

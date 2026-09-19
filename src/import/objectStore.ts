@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { createReadStream } from 'node:fs';
-import { access, copyFile, mkdir, rename, stat } from 'node:fs/promises';
+import { access, copyFile, mkdir, rename, stat, unlink, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 
 export interface StagedObject {
@@ -21,11 +21,19 @@ async function hashFile(path: string): Promise<string> {
 export class ObjectStore {
   constructor(private readonly root: string) {}
 
-  async stageFile(sourcePath: string): Promise<StagedObject> {
+  async stageBytes(filename: string, bytes: Uint8Array): Promise<StagedObject> {
+    const incoming = join(this.root, 'incoming');
+    await mkdir(incoming, { recursive: true });
+    const temporary = join(incoming, `.upload-${process.pid}-${Date.now()}-${basename(filename)}`);
+    await writeFile(temporary, bytes);
+    try { return await this.stageFile(temporary, filename); } finally { await unlink(temporary).catch(() => undefined); }
+  }
+
+  async stageFile(sourcePath: string, sourceFilename = basename(sourcePath)): Promise<StagedObject> {
     const sourceSha256 = await hashFile(sourcePath);
     const sourceStat = await stat(sourcePath);
     const objectDir = join(this.root, 'objects', sourceSha256);
-    const objectPath = join(objectDir, basename(sourcePath));
+    const objectPath = join(objectDir, sourceFilename);
     await mkdir(objectDir, { recursive: true });
     try {
       await access(objectPath);
@@ -38,6 +46,6 @@ export class ObjectStore {
     }
     const copySha256 = await hashFile(objectPath);
     if (copySha256 !== sourceSha256) throw new Error('existing object hash does not match source hash');
-    return { sourcePath, objectPath, sourceSha256, copySha256, sizeBytes: sourceStat.size, sourceFilename: basename(sourcePath) };
+    return { sourcePath, objectPath, sourceSha256, copySha256, sizeBytes: sourceStat.size, sourceFilename };
   }
 }
