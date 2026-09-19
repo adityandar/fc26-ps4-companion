@@ -7,6 +7,7 @@ Local, read-only snapshot importer for Apollo-exported EA SPORTS FC 26 PS4 saves
 - Creates a byte-for-byte working copy before parsing.
 - Records source and working-copy SHA-256 hashes.
 - Calls the existing `fc26companion` parser for database/career extraction.
+- Uses a structured JSON bridge to the Companion parser rather than scraping terminal text.
 - Supports season, checkpoint, and user notes.
 - Prevents duplicate imports for the same career and save hash.
 - Provides a local upload page at `http://127.0.0.1:4130`.
