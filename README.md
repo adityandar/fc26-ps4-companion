@@ -26,6 +26,15 @@ npm run dev
 
 The app auto-detects the reference parser at `../public-reference/fc26companion`. For another location, copy [`config.example.json`](config.example.json) to `config.json` and edit `companionRoot`. Environment variables remain available as overrides.
 
+The recommended local setup is:
+
+```bash
+cp config.example.json config.json
+npm run dev
+```
+
+`config.json` is local-only and ignored by Git. Its `companionRoot` must point to the checkout of the pinned `fc26companion` revision. The server creates the SQLite database and object store under `data-v2/` automatically.
+
 The UI can upload an Apollo-exported `DATA` file, preview the parsed career, and commit it as a new immutable snapshot. Use `/import.html` for imports, `/` for single-snapshot browsing, and `/compare.html` for live comparisons. The original file is never written. No legacy catalog migration is required. See [`docs/USER_WORKFLOW.md`](docs/USER_WORKFLOW.md).
 
 ## Synthetic demo data
@@ -42,10 +51,6 @@ The fixture is explicitly marked synthetic and is safe to rerun; it never reads 
 
 The retired Python flow is documented in [`legacy/README.md`](legacy/README.md). It is intentionally not used by the new app.
 
-```bash
-FC26_COMPANION_ROOT=/path/to/fc26companion PYTHONPATH=. \
-python3 run_ps4_companion.py --port 4130
-```
 
 For external player names, provide the primary Companion/DataHub catalog:
 
