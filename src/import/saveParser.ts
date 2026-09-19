@@ -1,0 +1,16 @@
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { loadCompanionModules } from '../upstream/companion.js';
+import type { SnapshotCandidate } from '../domain/snapshot.js';
+import { normalizePs4Save } from './ps4Normalizer.js';
+
+export async function parseAndNormalizeSave(savePath: string, companionRoot = process.env.FC26_COMPANION_ROOT): Promise<SnapshotCandidate> {
+  if (!companionRoot) throw new Error('FC26_COMPANION_ROOT is required');
+  const modules = await loadCompanionModules(companionRoot);
+  const meta = modules.loadDbMeta(join(companionRoot, 'data/fifa_ng_db-meta.xml'));
+  const parsed = modules.parseSave(await readFile(savePath), meta) as { tables: Record<string, Record<string, unknown>[]> };
+  const names = modules.loadNameTable(join(companionRoot, 'data/playernames_fc26.csv'));
+  const derived = modules.deriveNameIds([parsed.tables], names);
+  const resolver = modules.createNameResolver(parsed.tables, names, derived) as { resolve: (playerId: number) => { display: string; origin: string; provisional: boolean } };
+  return normalizePs4Save(parsed, { parserVersion: 'companion-pinned-0e1d32a', nameResolver: (playerId) => ({ display: resolver.resolve(playerId).display, source: resolver.resolve(playerId).origin as 'primary', provisional: resolver.resolve(playerId).provisional, resolverVersion: 'companion-pinned-0e1d32a' }) });
+}
