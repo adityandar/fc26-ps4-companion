@@ -6,9 +6,7 @@
   "scripts": {
     "test": "node --import tsx --test tests/*.test.ts",
     "typecheck": "tsc --noEmit",
-    "dev": "tsx src/main.ts",
-    "migrate:json": "tsx scripts/migrateJson.ts",
-    "verify:parity": "tsx scripts/verifyParity.ts"
+    "dev": "tsx src/main.ts"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
