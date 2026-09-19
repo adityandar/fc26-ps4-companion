@@ -36,5 +36,7 @@ export function normalizePs4Save(parsed: unknown, context: NormalizationContext)
   const academyPlayers: AcademyPlayerState[] = table(tables, 'career_youthplayers').flatMap((row) => {
     const playerId = number(row, 'playerid'); return playerId === null ? [] : [{ playerId, name: context.nameResolver(playerId), tier: number(row, 'playertier'), lowPotential: number(row, 'swinglowpotential'), potentialVariance: number(row, 'potentialvariance'), monthsInSquad: number(row, 'monthsinsquad') }];
   });
-  return { schemaVersion: 1, careerHint: { clubTeamId, clubName: text(club, 'teamname'), managerName }, parsedSeasonIndex: number(user, 'seasoncount'), estimatedGameDate: null, estimatedDateBasis: null, players: playerStates, academyPlayers, evidence: PLAYER_EVIDENCE, warnings: [] };
+  const uniquePlayers = [...new Map(playerStates.map((player) => [player.playerId, player])).values()];
+  const uniqueAcademyPlayers = [...new Map(academyPlayers.map((player) => [player.playerId, player])).values()];
+  return { schemaVersion: 1, careerHint: { clubTeamId, clubName: text(club, 'teamname'), managerName }, parsedSeasonIndex: number(user, 'seasoncount'), estimatedGameDate: null, estimatedDateBasis: null, players: uniquePlayers, academyPlayers: uniqueAcademyPlayers, evidence: PLAYER_EVIDENCE, warnings: uniquePlayers.length !== playerStates.length || uniqueAcademyPlayers.length !== academyPlayers.length ? [{ code: 'duplicate-player-id', message: 'Duplicate player IDs were returned by the parser and were collapsed by playerId.', severity: 'warning' }] : [] };
 }
