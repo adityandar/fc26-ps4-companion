@@ -6,7 +6,10 @@ import type { PlayerState } from '../src/domain/snapshot.js';
 const databasePath = process.env.FC26_COMPANION_DATABASE ?? 'data-v2/companion.sqlite';
 const db = openDatabase(databasePath);
 const repository = createSnapshotRepository(db);
-const career = repository.listCareers().find((item) => item.label === 'Demo Manager · Demo FC') ?? repository.createCareer('Demo Manager · Demo FC');
+const baseLabel = 'Demo Manager · Demo FC';
+const existingCareer = repository.listCareers().find((item) => item.label === baseLabel);
+const existingHasFacts = existingCareer ? repository.listSnapshots(existingCareer.id).some((snapshot) => (snapshot.careerFacts?.seasons.length ?? 0) > 0) : false;
+const career = existingCareer && existingHasFacts ? existingCareer : repository.createCareer(existingCareer ? `${baseLabel} · Facts v2` : baseLabel);
 const basePlayers: PlayerState[] = [
   { playerId: 1001, name: { display: 'Demo Striker', source: 'demo', provisional: false, resolverVersion: 'demo-fixture' }, preferredPositions: [25], squadPosition: 25, overall: 72, potential: 80, birthdate: null, height: 184, weight: null, nationality: 14, contractUntil: 2029, wage: 5000, jerseyNumber: 9, leagueAppearances: 0, leagueGoals: 0, evidence: [] },
   { playerId: 1002, name: { display: 'Demo Keeper', source: 'demo', provisional: false, resolverVersion: 'demo-fixture' }, preferredPositions: [0], squadPosition: 0, overall: 70, potential: 76, birthdate: null, height: 191, weight: null, nationality: 21, contractUntil: 2030, wage: 4200, jerseyNumber: 1, leagueAppearances: 0, leagueGoals: 0, evidence: [] },
