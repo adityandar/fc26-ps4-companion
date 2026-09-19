@@ -23,9 +23,10 @@ export function createApiServer(repository: SnapshotRepository, port = 4132, hos
     try {
       const url = new URL(req.url ?? '/', `http://${host}`);
       if (req.method === 'POST' && importer && url.pathname === '/api/import/preview') return requestJson(req).then(async (body) => {
-        const filename = typeof body.filename === 'string' ? body.filename : 'DATA';
+        const filename = typeof body.filename === 'string' && body.filename.length <= 128 ? body.filename.replace(/[^a-zA-Z0-9._-]/g, '_') : 'DATA';
         const encoded = typeof body.dataBase64 === 'string' ? body.dataBase64 : '';
         if (!encoded) return json(res, 400, { error: 'dataBase64 is required' });
+        if (encoded.length > 64 * 1024 * 1024) return json(res, 413, { error: 'uploaded save exceeds 48 MiB decoded limit' });
         const preview = await importer.previewBytes(filename, Buffer.from(encoded, 'base64'));
         const token = `${preview.staged.sourceSha256}-${Date.now()}`; previews.set(token, preview);
         return json(res, 200, { token, sourceSha256: preview.staged.sourceSha256, copySha256: preview.staged.copySha256, sizeBytes: preview.staged.sizeBytes, sourceFilename: preview.staged.sourceFilename, careerHint: preview.careerHint, candidate: { managerName: preview.candidate.careerHint.managerName, clubName: preview.candidate.careerHint.clubName, players: preview.candidate.players.length, academyPlayers: preview.candidate.academyPlayers.length, estimatedGameDate: preview.candidate.estimatedGameDate, parsedSeasonIndex: preview.candidate.parsedSeasonIndex, warnings: preview.candidate.warnings } });
