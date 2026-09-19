@@ -21,10 +21,12 @@ The original save is never written. Runtime data is kept under `data/`, which is
 
 ```bash
 npm install
-FC26_COMPANION_ROOT=/path/to/fc26companion HOST=0.0.0.0 PORT=4132 npm run dev
+FC26_COMPANION_ROOT=/path/to/fc26companion \
+FC26_COMPANION_OBJECT_ROOT=data-v2/objects \
+HOST=0.0.0.0 PORT=4132 npm run dev
 ```
 
-The current UI reads the new SQLite database. Browser upload/import is the next production slice; until then, no legacy catalog migration is required.
+The UI can upload an Apollo-exported `DATA` file, preview the parsed career, and commit it as a new immutable snapshot. The original file is never written. No legacy catalog migration is required.
 
 ## Legacy reference
 
