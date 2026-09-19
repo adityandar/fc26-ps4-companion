@@ -6,3 +6,4 @@ tests/__pycache__/
 node_modules/
 data-v2/
 graphify-out/
+config.json

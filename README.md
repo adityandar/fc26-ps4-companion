@@ -21,10 +21,10 @@ The original save is never written. Runtime data is kept under `data/`, which is
 
 ```bash
 npm install
-FC26_COMPANION_ROOT=/path/to/fc26companion \
-FC26_COMPANION_OBJECT_ROOT=data-v2/objects \
-HOST=0.0.0.0 PORT=4132 npm run dev
+npm run dev
 ```
+
+The app auto-detects the reference parser at `../public-reference/fc26companion`. For another location, copy [`config.example.json`](config.example.json) to `config.json` and edit `companionRoot`. Environment variables remain available as overrides.
 
 The UI can upload an Apollo-exported `DATA` file, preview the parsed career, and commit it as a new immutable snapshot. The original file is never written. No legacy catalog migration is required.
 
