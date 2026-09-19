@@ -29,7 +29,7 @@ export function normalizePs4Save(parsed: unknown, context: NormalizationContext)
   const playerStates: PlayerState[] = [];
   for (const link of links) {
     const playerId = number(link, 'playerid'); const player = players.get(playerId); if (playerId === null || !player) continue;
-    const preferredPositions = [1, 2, 3, 4].map((index) => number(player, `preferredposition${index}`)).filter((value): value is number => value !== null && value > 0);
+    const preferredPositions = [1, 2, 3, 4].map((index) => number(player, `preferredposition${index}`)).filter((value): value is number => value !== null);
     const contract = contracts.get(playerId);
     playerStates.push({ playerId, name: context.nameResolver(playerId), preferredPositions, squadPosition: number(link, 'position'), overall: number(player, 'overallrating'), potential: number(player, 'potential'), birthdate: number(player, 'birthdate'), height: number(player, 'height'), weight: number(player, 'weight'), nationality: number(player, 'nationality'), contractUntil: number(player, 'contractvaliduntil'), wage: number(contract, 'wage'), jerseyNumber: number(link, 'jerseynumber'), leagueAppearances: number(link, 'leagueappearances'), leagueGoals: number(link, 'leaguegoals'), evidence: evidenceFor(['overall', 'potential', 'preferredPositions', 'height', 'contractUntil', 'squadPosition', 'wage']) });
   }

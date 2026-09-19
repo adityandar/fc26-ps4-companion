@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import type { SnapshotId } from '../domain/ids.js';
-import { snapshotId } from '../domain/ids.js';
+import { careerId, snapshotId } from '../domain/ids.js';
 import { compareSnapshots, IncompatibleCareerError } from '../comparison/compareSnapshots.js';
 import type { SnapshotRepository } from '../store/snapshotRepository.js';
 
@@ -15,7 +15,7 @@ export function createApiServer(repository: SnapshotRepository, port = 4132, hos
       if (req.method !== 'GET') return json(res, 405, { error: 'read-only route' });
       if (url.pathname === '/api/careers') return json(res, 200, repository.listCareers());
       const careerMatch = /^\/api\/careers\/([^/]+)\/snapshots$/.exec(url.pathname);
-      if (careerMatch) return json(res, 200, repository.listSnapshots(careerMatch[1] as never));
+      if (careerMatch) return json(res, 200, repository.listSnapshots(careerId(careerMatch[1])));
       const snapshotMatch = /^\/api\/snapshots\/([^/]+)$/.exec(url.pathname);
       if (snapshotMatch) { const found = repository.getSnapshot(snapshotId(snapshotMatch[1])); return found ? json(res, 200, found) : json(res, 404, { error: 'snapshot not found' }); }
       if (url.pathname === '/api/compare') {
