@@ -26,7 +26,7 @@ npm run dev
 
 The app auto-detects the reference parser at `../public-reference/fc26companion`. For another location, copy [`config.example.json`](config.example.json) to `config.json` and edit `companionRoot`. Environment variables remain available as overrides.
 
-The UI can upload an Apollo-exported `DATA` file, preview the parsed career, and commit it as a new immutable snapshot. The original file is never written. No legacy catalog migration is required.
+The UI can upload an Apollo-exported `DATA` file, preview the parsed career, and commit it as a new immutable snapshot. Use `/import.html` for imports, `/` for single-snapshot browsing, and `/compare.html` for live comparisons. The original file is never written. No legacy catalog migration is required. See [`docs/USER_WORKFLOW.md`](docs/USER_WORKFLOW.md).
 
 ## Legacy reference
 

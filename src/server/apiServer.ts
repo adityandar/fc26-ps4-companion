@@ -19,7 +19,7 @@ async function requestJson(req: IncomingMessage): Promise<Record<string, unknown
 }
 
 export function createApiServer(repository: SnapshotRepository, port = 4132, host = '127.0.0.1', webRoot = join(process.cwd(), 'web-v2'), importer?: ImportService) {
-  const previews = new Map<string, ImportPreview>();
+  const previews = new Map<string, { preview: ImportPreview; expiresAt: number }>();
   const server = createServer((req, res) => {
     try {
       const url = new URL(req.url ?? '/', `http://${host}`);
@@ -28,13 +28,14 @@ export function createApiServer(repository: SnapshotRepository, port = 4132, hos
         const encoded = typeof body.dataBase64 === 'string' ? body.dataBase64 : '';
         if (!encoded) return json(res, 400, { error: 'dataBase64 is required' });
         if (encoded.length > 64 * 1024 * 1024) return json(res, 413, { error: 'uploaded save exceeds 48 MiB decoded limit' });
-        const preview = await importer.previewBytes(filename, Buffer.from(encoded, 'base64'));
-        const token = `${preview.staged.sourceSha256}-${Date.now()}`; previews.set(token, preview);
+        const bytes = Buffer.from(encoded, 'base64'); if (!bytes.length) return json(res, 400, { error: 'uploaded save is empty' }); if (bytes.length > 48 * 1024 * 1024) return json(res, 413, { error: 'uploaded save exceeds 48 MiB limit' });
+        const preview = await importer.previewBytes(filename, bytes);
+        const token = `${preview.staged.sourceSha256}-${Date.now()}`; previews.set(token, { preview, expiresAt: Date.now() + 15 * 60 * 1000 });
         return json(res, 200, { token, sourceSha256: preview.staged.sourceSha256, copySha256: preview.staged.copySha256, sizeBytes: preview.staged.sizeBytes, sourceFilename: preview.staged.sourceFilename, careerHint: preview.careerHint, candidate: { managerName: preview.candidate.careerHint.managerName, clubName: preview.candidate.careerHint.clubName, players: preview.candidate.players.length, academyPlayers: preview.candidate.academyPlayers.length, estimatedGameDate: preview.candidate.estimatedGameDate, parsedSeasonIndex: preview.candidate.parsedSeasonIndex, warnings: preview.candidate.warnings } });
       }).catch((error) => json(res, 400, { error: error instanceof Error ? error.message : 'import preview failed' }));
       if (req.method === 'POST' && importer && url.pathname === '/api/import/commit') return requestJson(req).then((body) => {
-        const token = typeof body.token === 'string' ? body.token : ''; const preview = previews.get(token);
-        if (!preview) return json(res, 404, { error: 'preview expired or not found' });
+        const token = typeof body.token === 'string' ? body.token : ''; const entry = previews.get(token); const preview = entry?.preview;
+        if (!entry || !preview || entry.expiresAt < Date.now()) { previews.delete(token); return json(res, 404, { error: 'preview expired or not found' }); }
         const seasonLabel = typeof body.seasonLabel === 'string' ? body.seasonLabel : 'unknown'; const checkpoint = typeof body.checkpoint === 'string' ? body.checkpoint : 'custom';
         const careerIdValue = typeof body.careerId === 'string' && body.careerId ? { kind: 'existing' as const, id: body.careerId as never } : { kind: 'new' as const, label: typeof body.careerLabel === 'string' && body.careerLabel ? body.careerLabel : preview.careerHint };
         const snapshot = importer.commit(preview, careerIdValue, { seasonLabel, checkpoint, note: typeof body.note === 'string' ? body.note : undefined }); previews.delete(token);
