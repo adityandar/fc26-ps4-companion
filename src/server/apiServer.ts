@@ -29,7 +29,7 @@ export function createApiServer(repository: SnapshotRepository, port = 4132, hos
         const preview = await importer.previewBytes(filename, Buffer.from(encoded, 'base64'));
         const token = `${preview.staged.sourceSha256}-${Date.now()}`; previews.set(token, preview);
         return json(res, 200, { token, sourceSha256: preview.staged.sourceSha256, copySha256: preview.staged.copySha256, sizeBytes: preview.staged.sizeBytes, sourceFilename: preview.staged.sourceFilename, careerHint: preview.careerHint, candidate: { managerName: preview.candidate.careerHint.managerName, clubName: preview.candidate.careerHint.clubName, players: preview.candidate.players.length, academyPlayers: preview.candidate.academyPlayers.length, estimatedGameDate: preview.candidate.estimatedGameDate, parsedSeasonIndex: preview.candidate.parsedSeasonIndex, warnings: preview.candidate.warnings } });
-      });
+      }).catch((error) => json(res, 400, { error: error instanceof Error ? error.message : 'import preview failed' }));
       if (req.method === 'POST' && importer && url.pathname === '/api/import/commit') return requestJson(req).then((body) => {
         const token = typeof body.token === 'string' ? body.token : ''; const preview = previews.get(token);
         if (!preview) return json(res, 404, { error: 'preview expired or not found' });
@@ -37,7 +37,7 @@ export function createApiServer(repository: SnapshotRepository, port = 4132, hos
         const careerIdValue = typeof body.careerId === 'string' && body.careerId ? { kind: 'existing' as const, id: body.careerId as never } : { kind: 'new' as const, label: typeof body.careerLabel === 'string' && body.careerLabel ? body.careerLabel : preview.careerHint };
         const snapshot = importer.commit(preview, careerIdValue, { seasonLabel, checkpoint, note: typeof body.note === 'string' ? body.note : undefined }); previews.delete(token);
         return json(res, 201, { snapshotId: snapshot.id, careerId: snapshot.careerId, sourceSha256: snapshot.sourceSha256 });
-      });
+      }).catch((error) => json(res, 400, { error: error instanceof Error ? error.message : 'import commit failed' }));
       if (req.method !== 'GET') return json(res, 405, { error: 'method not allowed' });
       if (url.pathname === '/' || url.pathname === '/index.html') {
         return readFile(join(webRoot, 'index.html')).then((data) => { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); res.end(data); }).catch(() => json(res, 404, { error: 'web ui not found' }));
