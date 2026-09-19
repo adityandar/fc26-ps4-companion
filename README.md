@@ -38,16 +38,6 @@ npm run demo:seed
 
 The fixture is explicitly marked synthetic and is safe to rerun; it never reads or modifies a real save.
 
-## Parser parity
-
-Compare the internal read-only decoder with the pinned reference on a working copy:
-
-```bash
-FC26_COMPANION_ROOT=/path/to/fc26companion npm run verify:parser -- --save /path/to/working-copy/DATA
-```
-
-The command reports the input SHA-256, database/table counts, and row-count mismatches. It never writes to the save or application store.
-
 ## Legacy reference
 
 The retired Python flow is documented in [`legacy/README.md`](legacy/README.md). It is intentionally not used by the new app.
