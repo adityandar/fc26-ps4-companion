@@ -13,7 +13,17 @@ ROOT=Path(__file__).resolve().parent
 DATA=ROOT/'data'; INBOX=DATA/'inbox'; WORKING=DATA/'working-copies'; OUTPUT=DATA
 
 def page(body: str) -> bytes:
-    return ("<!doctype html><html><head><meta charset='utf-8'><title>PS4 Companion</title><style>body{font:16px system-ui;max-width:850px;margin:40px auto;background:#101116;color:#eee}main{background:#191b22;padding:28px;border-radius:12px}input,select,textarea{display:block;width:100%;margin:8px 0 18px;padding:10px;background:#252833;color:#fff;border:1px solid #555;border-radius:6px}button{padding:11px 18px;border:0;border-radius:6px;background:#9fef00;color:#111;font-weight:700}pre{white-space:pre-wrap;background:#0b0c10;padding:16px;border-radius:8px}.muted{color:#aaa}</style></head><body><main>"+body+"</main></body></html>").encode()
+    return ("<!doctype html><html><head><meta charset='utf-8'><title>PS4 Companion</title><style>body{font:16px system-ui;max-width:850px;margin:40px auto;background:#101116;color:#eee}main{background:#191b22;padding:28px;border-radius:12px}input,select,textarea{display:block;width:100%;margin:8px 0 18px;padding:10px;background:#252833;color:#fff;border:1px solid #555;border-radius:6px}button{padding:11px 18px;border:0;border-radius:6px;background:#9fef00;color:#111;font-weight:700}pre{white-space:pre-wrap;background:#0b0c10;padding:16px;border-radius:8px}.muted{color:#aaa}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.card{background:#252833;padding:14px;border-radius:8px}.card strong{display:block;font-size:24px;color:#9fef00}.badge{display:inline-block;background:#414857;padding:4px 8px;border-radius:12px}.note{border-left:3px solid #9fef00;padding-left:12px}</style></head><body><main>"+body+"</main></body></html>").encode()
+
+def render_import_summary(record) -> str:
+    summary = record.derived_summary
+    insights = summary.get('insights', {})
+    available = insights.get('available', {})
+    unavailable = insights.get('unavailable', [])
+    cards = ''.join(f"<div class='card'><span>{label}</span><strong>{html.escape(str(value if value is not None else '—'))}</strong></div>" for label, value in [('Senior players', summary.get('senior_players')), ('Academy players', summary.get('academy_players')), ('Estimated date', summary.get('estimated_date'))])
+    missing = ''.join(f"<li>{html.escape(item.replace('_', ' ').capitalize())}</li>" for item in unavailable)
+    note = f"<p class='note'>{html.escape(record.user_note)}</p>" if record.user_note else ''
+    return f"<h1>Snapshot imported</h1><p><span class='badge'>{html.escape(insights.get('mode', 'snapshot'))}</span> {html.escape(insights.get('headline', ''))}</p><div class='cards'>{cards}</div><p><b>Career:</b> {html.escape(record.career_id)}<br><b>Season:</b> {html.escape(record.season)} · <b>Checkpoint:</b> {html.escape(record.checkpoint)}<br><b>SHA-256:</b> <code>{html.escape(record.source_sha256)}</code></p>{note}<h2>Not available yet</h2><ul>{missing or '<li>All baseline fields available</li>'}</ul><details><summary>Raw parsed record</summary><pre>{html.escape(json.dumps(record.to_dict(),indent=2,ensure_ascii=False))}</pre></details><p><a href='/'>Back</a></p>"
 
 class Handler(BaseHTTPRequestHandler):
     def send_page(self, body, status=200):
@@ -45,7 +55,7 @@ class Handler(BaseHTTPRequestHandler):
         try:
             preview=preview_import(ImportRequest(source,season,checkpoint,note),WORKING,Path(os.environ.get('FC26_COMPANION_ROOT', str(ROOT))))
             record=commit_import(preview,Catalog(OUTPUT/'catalog.json'),OUTPUT,confirm=True)
-            self.send_page(f"<h1>Imported</h1><p>{html.escape(record.club_name)} · {html.escape(record.manager_name)}</p><pre>{html.escape(json.dumps(record.to_dict(),indent=2,ensure_ascii=False))}</pre><p><a href='/'>Back</a></p>")
+            self.send_page(render_import_summary(record))
         except Exception as exc: self.send_page(f"<h1>Import failed</h1><pre>{html.escape(str(exc))}</pre><p><a href='/'>Back</a></p>",500)
     def log_message(self,*args): pass
 
