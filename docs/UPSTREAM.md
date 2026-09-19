@@ -1,7 +1,5 @@
 # Upstream Companion Boundary
 
-> Transition note: `fc26companion` is currently used by the import path as a temporary parser oracle. The long-term production target is the independent parser described in [`PARSER_REWRITE.md`](PARSER_REWRITE.md). This file is retained for attribution and parity provenance.
-
 The final PS4 application reuses the public `fc26companion` implementation through a local adapter.
 
 - Repository: https://github.com/srikz4/fc26companion
