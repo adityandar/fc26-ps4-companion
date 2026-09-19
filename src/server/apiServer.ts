@@ -41,8 +41,9 @@ export function createApiServer(repository: SnapshotRepository, port = 4132, hos
         return json(res, 201, { snapshotId: snapshot.id, careerId: snapshot.careerId, sourceSha256: snapshot.sourceSha256 });
       }).catch((error) => json(res, 400, { error: error instanceof Error ? error.message : 'import commit failed' }));
       if (req.method !== 'GET') return json(res, 405, { error: 'method not allowed' });
-      if (url.pathname === '/' || url.pathname === '/index.html') {
-        return readFile(join(webRoot, 'index.html')).then((data) => { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); res.end(data); }).catch(() => json(res, 404, { error: 'web ui not found' }));
+      if (url.pathname === '/' || /^\/(index|import|compare)\.html$/.test(url.pathname)) {
+        const page = url.pathname === '/' ? 'index.html' : url.pathname.slice(1);
+        return readFile(join(webRoot, page)).then((data) => { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); res.end(data); }).catch(() => json(res, 404, { error: 'web ui not found' }));
       }
       if (url.pathname === '/app.js' || url.pathname === '/styles.css') {
         const contentType = url.pathname.endsWith('.js') ? 'text/javascript; charset=utf-8' : 'text/css; charset=utf-8';
