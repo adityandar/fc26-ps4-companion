@@ -1,4 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import type { SnapshotId } from '../domain/ids.js';
 import { careerId, snapshotId } from '../domain/ids.js';
 import { compareSnapshots, IncompatibleCareerError } from '../comparison/compareSnapshots.js';
@@ -8,11 +10,18 @@ function json(res: ServerResponse, status: number, body: unknown): void {
   const data = JSON.stringify(body); res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'content-length': Buffer.byteLength(data) }); res.end(data);
 }
 
-export function createApiServer(repository: SnapshotRepository, port = 4132, host = '127.0.0.1') {
+export function createApiServer(repository: SnapshotRepository, port = 4132, host = '127.0.0.1', webRoot = join(process.cwd(), 'web-v2')) {
   const server = createServer((req, res) => {
     try {
       const url = new URL(req.url ?? '/', `http://${host}`);
       if (req.method !== 'GET') return json(res, 405, { error: 'read-only route' });
+      if (url.pathname === '/' || url.pathname === '/index.html') {
+        return readFile(join(webRoot, 'index.html')).then((data) => { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); res.end(data); }).catch(() => json(res, 404, { error: 'web ui not found' }));
+      }
+      if (url.pathname === '/app.js' || url.pathname === '/styles.css') {
+        const contentType = url.pathname.endsWith('.js') ? 'text/javascript; charset=utf-8' : 'text/css; charset=utf-8';
+        return readFile(join(webRoot, url.pathname.slice(1))).then((data) => { res.writeHead(200, { 'content-type': contentType }); res.end(data); }).catch(() => json(res, 404, { error: 'asset not found' }));
+      }
       if (url.pathname === '/api/careers') return json(res, 200, repository.listCareers());
       const careerMatch = /^\/api\/careers\/([^/]+)\/snapshots$/.exec(url.pathname);
       if (careerMatch) return json(res, 200, repository.listSnapshots(careerId(careerMatch[1])));
