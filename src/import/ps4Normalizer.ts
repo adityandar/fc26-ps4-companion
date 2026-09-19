@@ -1,12 +1,14 @@
 import type { FieldEvidence } from '../domain/evidence.js';
 import type { AcademyPlayerState, PlayerState, ResolvedName, SnapshotCandidate } from '../domain/snapshot.js';
 import { PLAYER_EVIDENCE } from './schemaManifest.js';
+import type { CareerFacts, CompetitionProgress, SeasonRecord } from '../domain/careerFacts.js';
 
 type Row = Record<string, unknown>;
 type Tables = Record<string, Row[]>;
 const number = (row: Row | undefined, field: string): number | null => typeof row?.[field] === 'number' ? row[field] as number : null;
 const text = (row: Row | undefined, field: string): string | null => typeof row?.[field] === 'string' && row[field] ? row[field] as string : null;
 const table = (tables: Tables, name: string): Row[] => tables[name] ?? [];
+const numberValue = (row: Row | undefined, key: string): number | null => typeof row?.[key] === 'number' ? row[key] as number : null;
 
 export interface NormalizationContext {
   readonly parserVersion: string;
@@ -38,5 +40,10 @@ export function normalizePs4Save(parsed: unknown, context: NormalizationContext)
   });
   const uniquePlayers = [...new Map(playerStates.map((player) => [player.playerId, player])).values()];
   const uniqueAcademyPlayers = [...new Map(academyPlayers.map((player) => [player.playerId, player])).values()];
-  return { schemaVersion: 1, careerHint: { clubTeamId, clubName: text(club, 'teamname'), managerName }, parsedSeasonIndex: number(user, 'seasoncount'), estimatedGameDate: null, estimatedDateBasis: null, players: uniquePlayers, academyPlayers: uniqueAcademyPlayers, evidence: PLAYER_EVIDENCE, warnings: uniquePlayers.length !== playerStates.length || uniqueAcademyPlayers.length !== academyPlayers.length ? [{ code: 'duplicate-player-id', message: 'Duplicate player IDs were returned by the parser and were collapsed by playerId.', severity: 'warning' }] : [] };
+  const pref = table(tables, 'career_managerpref')[0];
+  const score = (kind: 'win' | 'loss') => { const userScore = numberValue(managerInfo, `big${kind}userscore`); const opponentScore = numberValue(managerInfo, `big${kind}oppscore`); const date = numberValue(managerInfo, `big${kind}date`); if (userScore === null || opponentScore === null || date === null || date <= 20080101) return null; return { userScore, opponentScore, opponentTeamId: numberValue(managerInfo, `big${kind}oppteamid`), date }; };
+  const seasons: SeasonRecord[] = table(tables, 'career_managerhistory').map((row) => ({ season: numberValue(row, 'season'), played: numberValue(row, 'games_played') ?? 0, wins: numberValue(row, 'wins') ?? 0, draws: numberValue(row, 'draws') ?? 0, losses: numberValue(row, 'losses') ?? 0, points: numberValue(row, 'points'), position: numberValue(row, 'tableposition'), goalsFor: numberValue(row, 'goals_for'), goalsAgainst: numberValue(row, 'goals_against'), leagueTrophies: numberValue(row, 'leaguetrophies') ?? 0, cupTrophies: (numberValue(row, 'domesticcuptrophies') ?? 0) + (numberValue(row, 'continentalcuptrophies') ?? 0) }));
+  const competitions: CompetitionProgress[] = table(tables, 'career_competitionprogress').map((row) => ({ name: text(row, 'compshortname') ?? `Competition #${numberValue(row, 'compobjid') ?? 'unknown'}`, season: numberValue(row, 'season'), stage: numberValue(row, 'stageid'), won: (numberValue(row, 'hasteamwon') ?? 0) !== 0, result: numberValue(row, 'cup_objective_result') }));
+  const careerFacts: CareerFacts = { managerReputation: numberValue(managerInfo, 'managerreputation'), managerWage: numberValue(managerInfo, 'wage'), totalEarnings: numberValue(managerInfo, 'totalearnings'), clubWorth: numberValue(club, 'clubworth'), profitability: numberValue(club, 'profitability'), domesticPrestige: numberValue(club, 'domesticprestige'), internationalPrestige: numberValue(club, 'internationalprestige'), youthDevelopment: numberValue(club, 'youthdevelopment'), transferBudget: numberValue(pref, 'transferbudget'), wageBudget: numberValue(pref, 'wagebudget'), biggestWin: score('win'), biggestLoss: score('loss'), seasons, competitions };
+  return { schemaVersion: 1, careerHint: { clubTeamId, clubName: text(club, 'teamname'), managerName }, parsedSeasonIndex: number(user, 'seasoncount'), estimatedGameDate: null, estimatedDateBasis: null, players: uniquePlayers, academyPlayers: uniqueAcademyPlayers, evidence: PLAYER_EVIDENCE, warnings: uniquePlayers.length !== playerStates.length || uniqueAcademyPlayers.length !== academyPlayers.length ? [{ code: 'duplicate-player-id', message: 'Duplicate player IDs were returned by the parser and were collapsed by playerId.', severity: 'warning' }] : [], careerFacts };
 }

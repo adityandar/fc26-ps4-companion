@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS snapshot (
   club_name TEXT,
   user_note TEXT NOT NULL,
   imported_at TEXT NOT NULL,
+  career_facts_json TEXT NOT NULL DEFAULT '{}',
   UNIQUE(career_id, source_sha256)
 );
 CREATE TABLE IF NOT EXISTS snapshot_player (
@@ -74,6 +75,8 @@ export function openDatabase(path: string): Database.Database {
   mkdirSync(dirname(path), { recursive: true });
   const db = new Database(path);
   db.exec(SCHEMA);
+  const columns = db.prepare('PRAGMA table_info(snapshot)').all() as { name: string }[];
+  if (!columns.some((column) => column.name === 'career_facts_json')) db.exec("ALTER TABLE snapshot ADD COLUMN career_facts_json TEXT NOT NULL DEFAULT '{}'");
   db.prepare("INSERT OR REPLACE INTO schema_meta(key, value) VALUES ('version', '1')").run();
   return db;
 }

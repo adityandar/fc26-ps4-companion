@@ -1,5 +1,6 @@
 import type { CareerId, SnapshotId } from './ids.js';
 import type { FieldEvidence, ParserWarning } from './evidence.js';
+import type { CareerFacts } from './careerFacts.js';
 
 export const SNAPSHOT_SCHEMA_VERSION = 1;
 
@@ -48,6 +49,7 @@ export interface SnapshotCandidate {
   readonly academyPlayers: readonly AcademyPlayerState[];
   readonly evidence: readonly FieldEvidence[];
   readonly warnings: readonly ParserWarning[];
+  readonly careerFacts?: CareerFacts;
 }
 
 export interface Snapshot extends SnapshotCandidate {
