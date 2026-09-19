@@ -12,5 +12,11 @@ export async function parseAndNormalizeSave(savePath: string, companionRoot = pr
   const names = modules.loadNameTable(join(companionRoot, 'data/playernames_fc26.csv'));
   const derived = modules.deriveNameIds([parsed.tables], names);
   const resolver = modules.createNameResolver(parsed.tables, names, derived) as { resolve: (playerId: number) => { display: string; origin: string; provisional: boolean } };
-  return normalizePs4Save(parsed, { parserVersion: 'companion-pinned-0e1d32a', nameResolver: (playerId) => ({ display: resolver.resolve(playerId).display, source: resolver.resolve(playerId).origin as 'primary', provisional: resolver.resolve(playerId).provisional, resolverVersion: 'companion-pinned-0e1d32a' }) });
+  const competitionMap = new Map<string, string>();
+  const competitionCsv = await readFile(join(companionRoot, 'data/competitions.csv'), 'utf8');
+  for (const line of competitionCsv.split(/\r?\n/).slice(1)) {
+    const match = line.match(/^([^,]+),(.*)$/);
+    if (match?.[1] && match[2]) competitionMap.set(match[1].trim(), match[2].trim());
+  }
+  return normalizePs4Save(parsed, { parserVersion: 'companion-pinned-0e1d32a', competitionResolver: (code) => competitionMap.get(code) ?? null, nameResolver: (playerId) => ({ display: resolver.resolve(playerId).display, source: resolver.resolve(playerId).origin as 'primary', provisional: resolver.resolve(playerId).provisional, resolverVersion: 'companion-pinned-0e1d32a' }) });
 }
