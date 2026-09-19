@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from .catalog import Catalog
 from .companion_bridge import ParsedCareer, parse_staged_save
+from .insights import build_insights
 from .model import ImportRecord, ImportRequest, STANDARD_CHECKPOINTS
 from .staging import StagedSave, stage_save
 
@@ -33,6 +34,16 @@ def commit_import(preview: ImportPreview, catalog: Catalog, output_root: Path, c
         "senior_players": preview.parsed.senior_players,
         "academy_players": preview.parsed.academy_players,
         "name_coverage": preview.parsed.name_coverage,
+    }
+    previous = next((r for r in reversed(catalog.records) if r.career_id == preview.career_id), None)
+    record = ImportRecord(import_id, str(preview.staged.source_path), str(preview.staged.working_copy_path), preview.staged.source_sha256, preview.staged.working_copy_sha256, preview.staged.size_bytes, preview.career_id, preview.parsed.manager_name, preview.parsed.club_name, preview.request.season, preview.request.checkpoint, preview.request.user_note, summary, stamp)
+    insight = build_insights(record, previous)
+    summary["insights"] = {
+        "mode": insight.mode,
+        "headline": insight.headline,
+        "available": insight.available,
+        "unavailable": insight.unavailable,
+        "changes": insight.changes,
     }
     record = ImportRecord(import_id, str(preview.staged.source_path), str(preview.staged.working_copy_path), preview.staged.source_sha256, preview.staged.working_copy_sha256, preview.staged.size_bytes, preview.career_id, preview.parsed.manager_name, preview.parsed.club_name, preview.request.season, preview.request.checkpoint, preview.request.user_note, summary, stamp)
     catalog.append(record)

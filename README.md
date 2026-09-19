@@ -10,6 +10,7 @@ Local, read-only snapshot importer for Apollo-exported EA SPORTS FC 26 PS4 saves
 - Uses a structured JSON bridge to the Companion parser rather than scraping terminal text.
 - Supports season, checkpoint, and user notes.
 - Prevents duplicate imports for the same career and save hash.
+- Treats one imported save as a complete `single_snapshot` baseline: career state, roster counts, parser coverage, hashes, and user notes remain available even without a comparison save. Later saves can add `comparison` insights.
 - Provides a local upload page at `http://127.0.0.1:4130`.
 
 The original save is never written. Runtime data is kept under `data/`, which is intentionally gitignored.

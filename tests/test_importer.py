@@ -20,5 +20,7 @@ class ImporterTests(unittest.TestCase):
             second=commit_import(preview,catalog,root,confirm=True)
             self.assertEqual(first.import_id,second.import_id)
             self.assertEqual(len(catalog.records),1)
+            self.assertEqual(first.derived_summary["insights"]["mode"], "single_snapshot")
+            self.assertIn("change_since_previous_snapshot", first.derived_summary["insights"]["unavailable"])
 
 if __name__ == '__main__': unittest.main()
