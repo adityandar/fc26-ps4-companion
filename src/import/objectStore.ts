@@ -14,7 +14,7 @@ export interface StagedObject {
 
 async function hashFile(path: string): Promise<string> {
   const hash = createHash('sha256');
-  for await (const chunk of createReadStream(path)) hash.update(chunk as Buffer);
+  for await (const chunk of createReadStream(path)) hash.update(new Uint8Array(chunk));
   return hash.digest('hex');
 }
 
