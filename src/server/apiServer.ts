@@ -42,7 +42,7 @@ export function createApiServer(repository: SnapshotRepository, port = 4132, hos
         return json(res, 201, { snapshotId: snapshot.id, careerId: snapshot.careerId, sourceSha256: snapshot.sourceSha256 });
       }).catch((error) => json(res, 400, { error: error instanceof Error ? error.message : 'import commit failed' }));
       if (req.method !== 'GET') return json(res, 405, { error: 'method not allowed' });
-      if (url.pathname === '/' || /^\/(index|import|compare)\.html$/.test(url.pathname)) {
+      if (url.pathname === '/' || /^\/(index|import|view|compare)\.html$/.test(url.pathname)) {
         const page = url.pathname === '/' ? 'index.html' : url.pathname.slice(1);
         return readFile(join(webRoot, page)).then((data) => { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); res.end(data); }).catch(() => json(res, 404, { error: 'web ui not found' }));
       }
