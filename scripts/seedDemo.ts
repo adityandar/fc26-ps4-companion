@@ -8,7 +8,7 @@ const db = openDatabase(databasePath);
 const repository = createSnapshotRepository(db);
 const baseLabel = 'Demo Manager · Demo FC';
 const existingCareer = repository.listCareers().find((item) => item.label === baseLabel);
-const existingHasFacts = existingCareer ? repository.listSnapshots(existingCareer.id).some((snapshot) => (snapshot.careerFacts?.seasons.length ?? 0) > 0) : false;
+const existingHasFacts = existingCareer ? repository.listSnapshots(existingCareer.id).some((snapshot) => (snapshot.careerFacts?.seasons?.length ?? 0) > 0) : false;
 const career = existingCareer && existingHasFacts ? existingCareer : repository.createCareer(existingCareer ? `${baseLabel} · Facts v2` : baseLabel);
 const basePlayers: PlayerState[] = [
   { playerId: 1001, name: { display: 'Demo Striker', source: 'demo', provisional: false, resolverVersion: 'demo-fixture' }, preferredPositions: [25], squadPosition: 25, overall: 72, potential: 80, birthdate: null, height: 184, weight: null, nationality: 14, contractUntil: 2029, wage: 5000, jerseyNumber: 9, leagueAppearances: 0, leagueGoals: 0, evidence: [] },
