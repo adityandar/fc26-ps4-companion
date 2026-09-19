@@ -47,6 +47,14 @@ npm run demo:seed
 
 The fixture is explicitly marked synthetic and is safe to rerun; it never reads or modifies a real save.
 
+To reset only the development database, object store, and demo/import metadata:
+
+```bash
+npm run reset:dev -- --confirm
+```
+
+This command is intentionally scoped to `data-v2/`. It does not touch original saves, external working copies, `legacy/`, `sources/`, or `config.json`.
+
 ## Legacy reference
 
 The retired Python flow is documented in [`legacy/README.md`](legacy/README.md). It is intentionally not used by the new app.
