@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node --import tsx --test tests/*.test.ts",
     "typecheck": "tsc --noEmit",
-    "dev": "tsx src/main.ts"
+    "dev": "tsx src/main.ts",
+    "demo:seed": "tsx scripts/seedDemo.ts"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",

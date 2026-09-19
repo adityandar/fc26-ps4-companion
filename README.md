@@ -28,6 +28,16 @@ The app auto-detects the reference parser at `../public-reference/fc26companion`
 
 The UI can upload an Apollo-exported `DATA` file, preview the parsed career, and commit it as a new immutable snapshot. Use `/import.html` for imports, `/` for single-snapshot browsing, and `/compare.html` for live comparisons. The original file is never written. No legacy catalog migration is required. See [`docs/USER_WORKFLOW.md`](docs/USER_WORKFLOW.md).
 
+## Synthetic demo data
+
+Legacy JSON fixtures are not valid Apollo `DATA` files and must not be uploaded to the parser. To seed four safe synthetic snapshots directly into the new SQLite store:
+
+```bash
+npm run demo:seed
+```
+
+The fixture is explicitly marked synthetic and is safe to rerun; it never reads or modifies a real save.
+
 ## Legacy reference
 
 The retired Python flow is documented in [`legacy/README.md`](legacy/README.md). It is intentionally not used by the new app.
