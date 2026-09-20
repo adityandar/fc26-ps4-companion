@@ -9,6 +9,10 @@ function snapshot(id: string, career: string, players: Partial<Snapshot['players
   return { id: snapshotId(id), careerId: careerId(career), sourceSha256: id, copySha256: id, objectPath: id, sourceFilename: 'DATA', sizeBytes: 1, schemaVersion: 1, parserVersion: 'test', parsedSeasonIndex: 2, seasonLabel: '2026/27', checkpoint: id, estimatedGameDate: null, estimatedDateBasis: null, careerHint: { managerName: 'Manager', clubTeamId: 1, clubName: 'Club' }, players: players.map((player, index) => ({ playerId: index + 1, name, preferredPositions: [], squadPosition: 25, overall: 60, potential: 70, birthdate: null, height: null, weight: null, nationality: null, contractUntil: null, wage: null, jerseyNumber: null, leagueAppearances: null, leagueGoals: null, evidence: [], ...player })), academyPlayers: [], evidence: [], warnings: [], userNote: '', importedAt: 'now' };
 }
 
+function snapshotWithTransfers(id: string, transfers: NonNullable<Snapshot['careerFacts']>['transfers']): Snapshot {
+  return { ...snapshot(id, 'career', []), careerFacts: { managerReputation: null, managerWage: null, totalEarnings: null, clubWorth: null, profitability: null, domesticPrestige: null, internationalPrestige: null, youthDevelopment: null, transferBudget: null, wageBudget: null, biggestWin: null, biggestLoss: null, seasons: [], competitions: [], league: null, transfers } };
+}
+
 test('compares arbitrary snapshots live and suppresses unchanged fields', () => {
   const result = compareSnapshots(snapshot('a', 'career', [{ overall: 60 }]), snapshot('b', 'career', [{ overall: 61 }, { playerId: 2, name }]));
   assert.equal(result.players.joined.length, 1); assert.equal(result.players.updated[0]?.changes[0]?.field, 'overall');
@@ -21,4 +25,11 @@ test('compares contract metadata when it changes', () => {
 
 test('rejects cross-career comparison', () => {
   assert.throws(() => compareSnapshots(snapshot('a', 'one', []), snapshot('b', 'two', [])), IncompatibleCareerError);
+});
+
+test('exposes transfer activity added and removed between snapshots', () => {
+  const transfer = { playerId: 9, teamId: 1, offerTeamId: 2, offeredFee: 1500000, offeredWage: 2000, signedDate: 10, completionDate: 11, contractType: 3, isComingThisSeason: false, isLoanBuy: false, directApproach: false };
+  const result = compareSnapshots(snapshotWithTransfers('a', [transfer]), snapshotWithTransfers('b', [{ ...transfer, playerId: 10, offeredFee: 500000 }]));
+  assert.equal(result.transfers.added[0]?.playerId, 10);
+  assert.equal(result.transfers.removed[0]?.playerId, 9);
 });

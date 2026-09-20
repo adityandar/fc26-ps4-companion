@@ -1,5 +1,6 @@
 import type { SnapshotId } from './ids.js';
 import type { PlayerState } from './snapshot.js';
+import type { TransferActivity } from './careerFacts.js';
 
 export interface PlayerFieldChange {
   readonly field: string;
@@ -37,5 +38,6 @@ export interface ComparisonResult {
     readonly updated: readonly PlayerUpdated[];
   };
   readonly academy: { readonly added: number; readonly removed: number };
+  readonly transfers: { readonly added: readonly TransferActivity[]; readonly removed: readonly TransferActivity[] };
   readonly summary: Readonly<Record<string, number>>;
 }
