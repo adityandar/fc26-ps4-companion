@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { existsSync } from 'node:fs';
-import { readFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { SnapshotId } from '../domain/ids.js';
 import { careerId, snapshotId } from '../domain/ids.js';
@@ -19,7 +19,7 @@ async function requestJson(req: IncomingMessage): Promise<Record<string, unknown
   return JSON.parse(Buffer.concat(chunks).toString('utf8')) as Record<string, unknown>;
 }
 
-export function createApiServer(repository: SnapshotRepository, port = 4132, host = '127.0.0.1', webRoot = existsSync(join(process.cwd(), 'web-v2', 'dist')) ? join(process.cwd(), 'web-v2', 'dist') : join(process.cwd(), 'web-v2'), importer?: ImportService, currency = 'USD') {
+export function createApiServer(repository: SnapshotRepository, port = 4132, host = '127.0.0.1', webRoot = existsSync(join(process.cwd(), 'web-v2', 'dist')) ? join(process.cwd(), 'web-v2', 'dist') : join(process.cwd(), 'web-v2'), importer?: ImportService, currency = 'USD', databasePath?: string) {
   const previews = new Map<string, { preview: ImportPreview; expiresAt: number }>();
   const server = createServer((req, res) => {
     try {
@@ -34,6 +34,11 @@ export function createApiServer(repository: SnapshotRepository, port = 4132, hos
         const token = `${preview.staged.sourceSha256}-${Date.now()}`; previews.set(token, { preview, expiresAt: Date.now() + 15 * 60 * 1000 });
         return json(res, 200, { token, sourceSha256: preview.staged.sourceSha256, copySha256: preview.staged.copySha256, sizeBytes: preview.staged.sizeBytes, sourceFilename: preview.staged.sourceFilename, careerHint: preview.careerHint, candidate: { managerName: preview.candidate.careerHint.managerName, clubName: preview.candidate.careerHint.clubName, players: preview.candidate.players.length, academyPlayers: preview.candidate.academyPlayers.length, estimatedGameDate: preview.candidate.estimatedGameDate, parsedSeasonIndex: preview.candidate.parsedSeasonIndex, warnings: preview.candidate.warnings } });
       }).catch((error) => json(res, 400, { error: error instanceof Error ? error.message : 'import preview failed' }));
+      if (req.method === 'POST' && databasePath && url.pathname === '/api/database/import') return requestJson(req).then(async (body) => {
+        const encoded = typeof body.dataBase64 === 'string' ? body.dataBase64 : ''; if (!encoded) return json(res, 400, { error: 'dataBase64 is required' });
+        const bytes = Buffer.from(encoded, 'base64'); if (bytes.subarray(0, 16).toString('utf8') !== 'SQLite format 3\u0000') return json(res, 400, { error: 'invalid SQLite database' });
+        const pending = `${databasePath}.restore`; await mkdir(join(databasePath, '..'), { recursive: true }); await writeFile(pending, bytes); return json(res, 202, { accepted: true, message: 'Database restore staged. Restart the app to activate it.', path: pending });
+      }).catch((error) => json(res, 400, { error: error instanceof Error ? error.message : 'database import failed' }));
       if (req.method === 'POST' && importer && url.pathname === '/api/import/commit') return requestJson(req).then((body) => {
         const token = typeof body.token === 'string' ? body.token : ''; const entry = previews.get(token); const preview = entry?.preview;
         if (!entry || !preview || entry.expiresAt < Date.now()) { previews.delete(token); return json(res, 404, { error: 'preview expired or not found' }); }
@@ -49,6 +54,7 @@ export function createApiServer(repository: SnapshotRepository, port = 4132, hos
       const deleteSnapshotMatch = /^\/api\/snapshots\/([^/]+)$/.exec(url.pathname);
       if (req.method === 'DELETE' && deleteSnapshotMatch) { const deleted = repository.deleteSnapshot(snapshotId(deleteSnapshotMatch[1])); return json(res, deleted ? 200 : 404, { deleted }); }
       if (req.method !== 'GET') return json(res, 405, { error: 'method not allowed' });
+      if (databasePath && url.pathname === '/api/database/export') return readFile(databasePath).then((data) => { res.writeHead(200, { 'content-type': 'application/vnd.sqlite3', 'content-disposition': 'attachment; filename="fc26-career-archive.sqlite"', 'cache-control': 'no-store' }); res.end(data); }).catch(() => json(res, 404, { error: 'database not found' }));
       if (url.pathname === '/' || /^\/(index|import|view|compare)\.html$/.test(url.pathname)) {
         const page = existsSync(join(webRoot, 'index.html')) && existsSync(join(webRoot, 'assets')) ? 'index.html' : (url.pathname === '/' ? 'index.html' : url.pathname.slice(1));
         return readFile(join(webRoot, page)).then((data) => { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' }); res.end(data); }).catch(() => json(res, 404, { error: 'web ui not found' }));
