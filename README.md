@@ -141,6 +141,15 @@ Demo data is synthetic and does not represent a real Apollo `DATA` file. It is s
 
 ## Architecture and attribution
 
+## Known parser limitations
+
+These limitations are intentional and documented; the application does not invent missing values:
+
+- Transfer activity is not fully captured. `career_presignedcontract` is a transitional deal table and may be empty after a transfer completes. `persistent_events` can provide player/club/date history, but it does not provide a fee and may not retain every club event in every snapshot.
+- Some player names remain unresolved. The save may contain only name IDs or no literal/custom name record; external fallback data is incomplete and any fallback name is marked with its source.
+- Some contract squad roles decode as `Not assigned` because `career_playercontract.playerrole` is `-1` in the raw save. This is observed raw data, not a parser default; the correct role cannot be inferred safely from position or player-role fields.
+- Snapshot-level values are authoritative for the moment imported. Cross-snapshot transfer reconstruction may require multiple snapshots and should be treated as derived history.
+
 See [`docs/architecture.md`](docs/architecture.md) for the system design, import flow, domain model, API, and source-table mapping.
 
 The main parser remains an external runtime dependency. Its use and the other research references are recorded in [`REFERENCE_SOURCES.json`](REFERENCE_SOURCES.json).
