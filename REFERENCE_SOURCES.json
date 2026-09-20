@@ -1,5 +1,6 @@
 [
-  {"id":"fc26companion_playernames","role":"primary_name_database","path_or_url":"https://github.com/ismailoksuz/EAFC26-DataHub","local_file":"data/playernames_fc26.csv","attribution":"EAFC26-DataHub / ismailoksuz; consumed by fc26companion"},
+  {"id":"fc26companion_parser","role":"primary_parser_runtime","path_or_url":"https://github.com/srikz4/fc26companion","local_file":"public-reference/fc26companion","revision":"0e1d32a87c9947be681803cd506bc543f912cfd8","license":"MIT","attribution":"fc26companion / srikz4; parser modules are loaded from a pinned external checkout"},
+  {"id":"fc26companion_playernames","role":"primary_name_database","path_or_url":"https://github.com/srikz4/fc26companion","local_file":"data/playernames_fc26.csv","license":"MIT","attribution":"fc26companion / srikz4; consumed by the parser boundary"},
   {"id":"basche14_eafc26","role":"fallback_player_database","path_or_url":"https://github.com/Basche14/EAFC26/blob/main/ea_fc26_players.csv","attribution":"Basche14 EAFC26 dataset"},
   {"id":"kaggle_eafc26_player_database","role":"fallback_player_database","path_or_url":"https://www.kaggle.com/datasets/flynn28/eafc26-player-database","attribution":"Kaggle EAFC26 Player Database; use subject to dataset license"},
   {"id":"futgg_269357","role":"verified_override_reference","path_or_url":"https://www.fut.gg/players/269357-nicola-valente/26-269357/","attribution":"FUT.GG; used to verify player ID 269357"}

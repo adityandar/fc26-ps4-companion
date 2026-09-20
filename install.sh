@@ -19,7 +19,7 @@ mkdir -p "${PROJECT_ROOT}/public-reference"
 if [ -d "${REFERENCE_ROOT}/.git" ]; then
   git -C "${REFERENCE_ROOT}" fetch --quiet origin
 else
-  git clone https://github.com/ismailoksuz/EAFC26-DataHub.git "${REFERENCE_ROOT}"
+  git clone https://github.com/srikz4/fc26companion.git "${REFERENCE_ROOT}"
 fi
 git -C "${REFERENCE_ROOT}" checkout --quiet "${REVISION}"
 

@@ -11,7 +11,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-RUN git clone https://github.com/ismailoksuz/EAFC26-DataHub.git /app/public-reference/fc26companion \
+RUN git clone https://github.com/srikz4/fc26companion.git /app/public-reference/fc26companion \
   && cd /app/public-reference/fc26companion \
   && git checkout ${COMPANION_REVISION} \
   && npm ci

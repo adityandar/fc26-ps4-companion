@@ -2,7 +2,7 @@
 
 Local, read-only dashboard for Apollo-exported EA SPORTS FC 26 PS4 career saves.
 
-The app creates an immutable working copy, parses it through the pinned [`fc26companion`](https://github.com/ismailoksuz/EAFC26-DataHub) parser boundary, stores normalized snapshot data in SQLite, and calculates comparisons live. It never modifies, resigns, or writes back to an original save.
+The app creates an immutable working copy, parses it through the pinned [`fc26companion`](https://github.com/srikz4/fc26companion) parser boundary, stores normalized snapshot data in SQLite, and calculates comparisons live. It never modifies, resigns, or writes back to an original save.
 
 ## Get Started
 
@@ -151,13 +151,13 @@ Historical Python/catalog flows remain under [`legacy/`](legacy/) for reference 
 
 This project is an independent read-only PS4 companion application. It uses the following projects and research references:
 
-- [EAFC26-DataHub / fc26companion](https://github.com/ismailoksuz/EAFC26-DataHub) — primary parser/runtime reference for FC26 save database tables, player names, competition labels, and career view-model semantics. The application pins and loads its parser modules at revision `0e1d32a87c9947be681803cd506bc543f912cfd8`.
+- [fc26companion](https://github.com/srikz4/fc26companion) — primary parser/runtime reference for FC26 save database tables, player names, competition labels, and career view-model semantics. The application pins and loads its parser modules at revision `0e1d32a87c9947be681803cd506bc543f912cfd8`. It is licensed under MIT; its copyright and permission notice are preserved by using the reference checkout rather than copying its source into this repository.
 - [Apollo Save Tool PS4 documentation](https://github.com/bucanero/apollo-ps4/blob/main/docs/usage.md) — documentation for exporting decrypted PS4 save data.
 - [FC26 Save Parser](https://github.com/mhirst1992/fc26-save-parser) and its [README](https://github.com/mhirst1992/fc26-save-parser/blob/main/README.md) — reference for `fifa_ng_db`, table-directory structure, signatures, CZUM field meanings, and FC26 PC save research.
 - [FC26 Companion](https://github.com/srikz4/fc26companion) — comparative reference for read-only Manager Career presentation and career data concepts.
 - [FIFA Career Save Parser](https://github.com/sammygriffiths/fifa-career-save-parser) — historical reference for FIFA Career Mode table and field conventions.
 - [SoccerGaming FIFA 18 reverse-engineering thread](https://soccergaming.com/forums/threads/fifa-18-save-editing-thread.6465621/) — historical research on career tables, players, teams, and internal database structures.
-- [EAFC26-DataHub player dataset](https://github.com/ismailoksuz/EAFC26-DataHub) — player-name and game-data reference used through the Companion parser boundary.
+- [EAFC26-DataHub](https://github.com/ismailoksuz/EAFC26-DataHub) — optional external player-data reference, separate from the runtime parser.
 - [Basche14 EAFC26 dataset](https://github.com/Basche14/EAFC26/blob/main/ea_fc26_players.csv) — optional fallback player-data reference.
 - [Kaggle EAFC26 Player Database](https://www.kaggle.com/datasets/flynn28/eafc26-player-database) — optional fallback research dataset, subject to its own license and terms.
 - [FUT.GG player reference](https://www.fut.gg/players/269357-nicola-valente/26-269357/) — targeted external cross-check for player ID `269357`.
