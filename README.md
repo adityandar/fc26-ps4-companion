@@ -37,6 +37,19 @@ docker compose up -d --build
 
 Open `http://SERVER_IP:4132`. The image clones and pins the required `fc26companion` revision during build. SQLite and immutable working copies persist in the local `data-v2/` volume.
 
+Useful Docker commands:
+
+```bash
+docker compose logs -f              # follow application logs
+docker compose ps                   # check service status
+docker compose stop                 # stop without deleting data
+docker compose start                # start again
+docker compose down                 # remove containers, keep ./data-v2
+git pull && docker compose up -d --build  # update and rebuild
+```
+
+Do not remove the `data-v2/` directory if you want to keep imported careers and snapshots. The original PS4 saves remain outside the container and are not modified.
+
 For a non-Docker installation, run the setup script once:
 
 ```bash
