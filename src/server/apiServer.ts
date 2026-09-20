@@ -48,6 +48,7 @@ export function createApiServer(repository: SnapshotRepository, port = 4132, hos
         return readFile(join(webRoot, page)).then((data) => { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' }); res.end(data); }).catch(() => json(res, 404, { error: 'web ui not found' }));
       }
       if (url.pathname.startsWith('/assets/')) return readFile(join(webRoot, url.pathname.slice(1))).then((data) => { res.writeHead(200, { 'content-type': url.pathname.endsWith('.js') ? 'text/javascript; charset=utf-8' : 'text/css; charset=utf-8', 'cache-control': 'no-store' }); res.end(data); }).catch(() => json(res, 404, { error: 'asset not found' }));
+      if (existsSync(join(webRoot, 'assets')) && !url.pathname.startsWith('/api/')) return readFile(join(webRoot, 'index.html')).then((data) => { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' }); res.end(data); }).catch(() => json(res, 404, { error: 'web ui not found' }));
       if (url.pathname === '/app.js' || url.pathname === '/styles.css') {
         const contentType = url.pathname.endsWith('.js') ? 'text/javascript; charset=utf-8' : 'text/css; charset=utf-8';
         return readFile(join(webRoot, url.pathname.slice(1))).then((data) => { res.writeHead(200, { 'content-type': contentType, 'cache-control': 'no-store' }); res.end(data); }).catch(() => json(res, 404, { error: 'asset not found' }));
