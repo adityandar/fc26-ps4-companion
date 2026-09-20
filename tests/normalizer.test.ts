@@ -69,4 +69,5 @@ test('normalizer captures club-focused contracts, growth, ranking, and transfer 
   assert.equal(candidate.careerFacts?.transfers?.[0]?.offeredFee, 2000);
   assert.equal(candidate.careerFacts?.transferEvents?.[0]?.fromTeamName, 'Rival FC');
   assert.equal(candidate.careerFacts?.transferEvents?.[0]?.toTeamName, 'Test FC');
+  assert.equal(candidate.careerFacts?.transferEvents?.[0]?.playerName, 'Player #8');
 });
