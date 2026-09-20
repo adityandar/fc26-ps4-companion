@@ -5,7 +5,7 @@ export class IncompatibleCareerError extends Error {
   constructor() { super('Snapshots belong to different careers'); }
 }
 
-const fields: readonly (keyof PlayerState)[] = ['overall', 'potential', 'squadPosition', 'contractUntil', 'wage', 'height', 'nationality', 'leagueAppearances', 'leagueGoals'];
+const fields: readonly (keyof PlayerState)[] = ['overall', 'potential', 'squadPosition', 'contractUntil', 'wage', 'height', 'nationality', 'leagueAppearances', 'leagueGoals', 'contractDurationMonths', 'contractStatus', 'playerRole'];
 
 function changes(before: PlayerState, after: PlayerState): readonly PlayerFieldChange[] {
   return fields.flatMap((field) => before[field] === after[field] ? [] : [{ field: String(field), before: before[field], after: after[field] }]);
