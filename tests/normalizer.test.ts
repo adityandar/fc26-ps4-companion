@@ -32,3 +32,20 @@ test('normalizer treats zero table position as an unavailable final position and
   assert.equal(candidate.careerFacts?.competitions[0]?.name, 'FA Cup');
   assert.equal(candidate.careerFacts?.competitions[0]?.stage, 543);
 });
+
+test('normalizer extracts the active league table from league links', () => {
+  const candidate = normalizePs4Save({ tables: {
+    career_users: [{ seasoncount: 2, clubteamid: 10, leagueid: 20 }],
+    career_managerinfo: [{ clubteamid: 10 }],
+    teams: [{ teamid: 10, teamname: 'Test FC' }, { teamid: 11, teamname: 'Rival FC' }],
+    leagues: [{ leagueid: 20, leaguename: 'Test League (1)' }],
+    leagueteamlinks: [
+      { leagueid: 20, teamid: 10, currenttableposition: 2, previousyeartableposition: 4, homewins: 3, awaywins: 1, homedraws: 2, awaydraws: 0, homelosses: 0, awaylosses: 1, homegf: 8, awaygf: 4, homega: 3, awayga: 2, points: 14 },
+      { leagueid: 20, teamid: 11, currenttableposition: 1, homewins: 5, awaywins: 0, homedraws: 0, awaydraws: 0, homelosses: 0, awaylosses: 1, homegf: 10, awaygf: 0, homega: 2, awayga: 1, points: 15 },
+    ],
+    teamplayerlinks: [], players: [], career_playercontract: [], career_youthplayers: [],
+  } }, { parserVersion: 'test', nameResolver: (playerId) => ({ display: `Player #${playerId}`, source: 'unresolved', provisional: false, resolverVersion: 'test' }) });
+  assert.equal(candidate.careerFacts?.league?.leagueName, 'Test League');
+  assert.equal(candidate.careerFacts?.league?.standings[1]?.isUserClub, true);
+  assert.equal(candidate.careerFacts?.league?.standings[1]?.previousPosition, 4);
+});
