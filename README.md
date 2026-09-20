@@ -1,100 +1,114 @@
 # FC26 PS4 Companion
 
-Local, read-only snapshot importer for Apollo-exported EA SPORTS FC 26 PS4 saves.
+Local, read-only dashboard for Apollo-exported EA SPORTS FC 26 PS4 career saves.
 
-## Current application
+The app creates an immutable working copy, parses it through the pinned [`fc26companion`](https://github.com/ismailoksuz/EAFC26-DataHub) parser boundary, stores normalized snapshot data in SQLite, and calculates comparisons live. It never modifies, resigns, or writes back to an original save.
 
-- Creates a byte-for-byte working copy before parsing.
-- Records source and working-copy SHA-256 hashes.
-- Calls the existing `fc26companion` parser for database/career extraction.
-- Uses a structured JSON bridge to the Companion parser rather than scraping terminal text.
-- Supports season, checkpoint, and user notes.
-- Prevents duplicate imports for the same career and save hash.
-- Treats one imported save as a complete `single_snapshot` baseline: career state, roster counts, parser coverage, hashes, and user notes remain available even without a comparison save. Later saves can add `comparison` insights.
-- Provides a TypeScript/SQLite API and browser workspace at `http://localhost:4132`.
+## Get Started
 
-The Python importer, JSON catalog, synthetic demo generator, and old web server are retained under [`legacy/`](legacy/) for historical reference only. They are not part of the production runtime and the new application does not read `catalog.json`.
+### 1. Requirements
 
-The original save is never written. Runtime data is kept under `data/`, which is intentionally gitignored.
+- Node.js 20 or newer;
+- an Apollo Save Tool decrypted PS4 `DATA` file;
+- the pinned `fc26companion` reference checkout.
 
-## Run the new application
+The default layout expects `public-reference/fc26companion` next to this project. If it is elsewhere, edit `config.json` and set `companionRoot` to its absolute path.
+
+### 2. Install and run
 
 ```bash
 npm install
 npm run dev
 ```
 
-The app auto-detects the reference parser at `../public-reference/fc26companion`. For another location, copy [`config.example.json`](config.example.json) to `config.json` and edit `companionRoot`. Environment variables remain available as overrides.
+Open [http://localhost:4132](http://localhost:4132).
 
-The recommended local setup is:
+The normal development command builds the React frontend and starts the local server. Runtime data is created under `data-v2/`, which is ignored by Git.
 
-```bash
-cp config.example.json config.json
-npm run dev
+### 3. Import a save
+
+1. Open **Import**.
+2. Choose the Apollo-decrypted `DATA` file.
+3. Click **Preview save** and wait for parsing to finish.
+4. Confirm the career, season, and checkpoint metadata.
+5. Choose an existing career or create a new one.
+6. Commit the snapshot.
+
+The source file is read-only. The app stores a byte-for-byte working copy and records both SHA-256 hashes.
+
+### 4. Browse and compare
+
+- **View** shows one snapshot independently: squad, academy, league table, manager history, contracts, transfers, evidence, and exports.
+- **Compare** selects any two snapshots from the same career and calculates player changes live.
+- A single snapshot is still useful; comparison fields simply remain unavailable until a second snapshot exists.
+
+Snapshots can belong to different seasons, so cross-season comparison is supported when they belong to the same career.
+
+## Configuration
+
+The local `config.json` is ignored by Git. A working example is:
+
+```json
+{
+  "companionRoot": "../public-reference/fc26companion",
+  "objectRoot": "data-v2/objects",
+  "databasePath": "data-v2/companion.sqlite",
+  "host": "127.0.0.1",
+  "port": 4132,
+  "currency": "USD"
+}
 ```
 
-`config.json` is local-only and ignored by Git. Its `companionRoot` must point to the checkout of the pinned `fc26companion` revision. The server creates the SQLite database and object store under `data-v2/` automatically.
+`currency` controls view-layer formatting for wages, fees, and transfer amounts. It does not alter stored raw values.
 
-The UI can upload an Apollo-exported `DATA` file, preview the parsed career, and commit it as a new immutable snapshot. Use `/import.html` for imports, `/` for single-snapshot browsing, and `/compare.html` for live comparisons. The original file is never written. No legacy catalog migration is required. See [`docs/USER_WORKFLOW.md`](docs/USER_WORKFLOW.md).
-
-## Synthetic demo data
-
-Legacy JSON fixtures are not valid Apollo `DATA` files and must not be uploaded to the parser. To seed four safe synthetic snapshots directly into the new SQLite store:
+Environment overrides:
 
 ```bash
+FC26_COMPANION_ROOT=/absolute/path/to/fc26companion npm run dev
+FC26_CURRENCY=EUR npm run dev
+```
+
+## What is currently captured
+
+The normalized snapshot includes:
+
+- senior squad and academy players;
+- names, positions, OVR, potential, height, contracts, wages, jersey numbers, and league appearances/goals;
+- current league table and club identity;
+- manager history, results, points, table position, goals, trophies, and biggest buy/sell records;
+- manager context such as earnings, club worth, budget, board confidence, and released-player count;
+- contract metadata from `career_playercontract`;
+- player-season growth values and squad ranking values;
+- transfer activity from `career_presignedcontract`;
+- parser evidence, warnings, source filename, checkpoint metadata, and SHA-256 hashes.
+
+Some numeric IDs remain internal codes when no verified lookup exists. The UI labels those conservatively rather than guessing.
+
+## Development commands
+
+```bash
+npm run typecheck
+npm test
+npm run build:web
 npm run demo:seed
-```
-
-The fixture is explicitly marked synthetic and is safe to rerun; it never reads or modifies a real save.
-
-To reset only the development database, object store, and demo/import metadata:
-
-```bash
 npm run reset:dev -- --confirm
 ```
 
-This command is intentionally scoped to `data-v2/`. It does not touch original saves, external working copies, `legacy/`, `sources/`, or `config.json`.
+Demo data is synthetic and does not represent a real Apollo `DATA` file. It is safe for UI testing and never modifies an original save.
 
-## Legacy reference
+## Data safety model
 
-The retired Python flow is documented in [`legacy/README.md`](legacy/README.md). It is intentionally not used by the new app.
+- Original saves are never used as write targets.
+- A byte-for-byte working copy is created before parsing.
+- Source and working-copy SHA-256 values are stored.
+- Comparison results are derived at request time and are not persisted into snapshots.
+- Save contents are treated as untrusted data and are never executed.
+- `sources/` and `public-reference/` are reference-only and must not be edited.
 
+## Architecture and attribution
 
-For external player names, provide the primary Companion/DataHub catalog:
+See [`docs/architecture.md`](docs/architecture.md) for the system design, import flow, domain model, API, and source-table mapping.
 
-```bash
-FC26_PLAYER_NAMES=/path/to/fc26companion/data/playernames_fc26.csv
-```
+The main parser remains an external runtime dependency. Its use and the other research references are recorded in [`REFERENCE_SOURCES.json`](REFERENCE_SOURCES.json).
 
-Optional fallback CSVs can be supplied as an OS-separated list; they are only consulted for IDs missing from the primary catalog:
-
-```bash
-FC26_PLAYER_NAMES_FALLBACK=/path/to/alternative.csv:/path/to/kaggle.csv
-```
-
-Name resolution uses the primary external `player_id` first, then fallback catalogs, then names recovered from the save, then `Player #ID`. Attribution is recorded in `REFERENCE_SOURCES.json`.
-
-Supported checkpoints:
-
-- `season_start`
-- `summer_window_closed`
-- `january_window_closed`
-- `season_end`
-- custom label through the web flow
-
-## Synthetic demo fixtures
-
-To create four safe demo snapshots from an already imported snapshot:
-
-```bash
-PYTHONPATH=. python3 generate_demo_data.py
-```
-
-The generator writes only to `data/demo/` and never modifies the original save, working copy, or production catalog. It covers unchanged players, rating/potential changes, one incoming player, one departed player, and academy growth.
-
-To view the synthetic catalog in the local web app without using production data:
-
-```bash
-FC26_COMPANION_DATA_ROOT=/Users/adityandar/Project/learning/fc26-save-research/ps4-companion/data/demo \
-PYTHONPATH=. python3 run_ps4_companion.py --port 4131
-```
+Historical Python/catalog flows remain under [`legacy/`](legacy/) for reference only and are not part of the production runtime.
