@@ -50,6 +50,24 @@ test('normalizer extracts the active league table from league links', () => {
   assert.equal(candidate.careerFacts?.league?.standings[1]?.previousPosition, 4);
 });
 
+test('normalizer overlays the managed club row from manager history when league links are stale', () => {
+  const candidate = normalizePs4Save({ tables: {
+    career_users: [{ seasoncount: 3, clubteamid: 10, leagueid: 20 }],
+    career_managerinfo: [{ clubteamid: 10 }],
+    teams: [{ teamid: 10, teamname: 'Padova' }, { teamid: 11, teamname: 'Rival FC' }],
+    leagues: [{ leagueid: 20, leaguename: 'Serie BKT' }],
+    leagueteamlinks: [
+      { leagueid: 20, teamid: 10, currenttableposition: 17, homewins: 0, awaywins: 0, homedraws: 0, awaydraws: 0, homelosses: 0, awaylosses: 0, homegf: 0, awaygf: 0, homega: 0, awayga: 0, points: 0 },
+      { leagueid: 20, teamid: 11, currenttableposition: 1, homewins: 0, awaywins: 0, homedraws: 0, awaydraws: 0, homelosses: 0, awaylosses: 0, homegf: 0, awaygf: 0, homega: 0, awayga: 0, points: 0 },
+    ],
+    career_managerhistory: [{ season: 3, teamid: 10, leagueid: 20, games_played: 6, wins: 2, draws: 3, losses: 1, goals_for: 14, goals_against: 10, points: 9 }],
+    teamplayerlinks: [], players: [], career_playercontract: [], career_youthplayers: [],
+  } }, { parserVersion: 'test', nameResolver: (playerId) => ({ display: `Player #${playerId}`, source: 'unresolved', provisional: false, resolverVersion: 'test' }) });
+  const club = candidate.careerFacts?.league?.standings.find((row) => row.isUserClub);
+  assert.deepEqual({ played: club?.played, wins: club?.wins, draws: club?.draws, losses: club?.losses, goalsFor: club?.goalsFor, goalsAgainst: club?.goalsAgainst, points: club?.points }, { played: 6, wins: 2, draws: 3, losses: 1, goalsFor: 14, goalsAgainst: 10, points: 9 });
+  assert.equal(candidate.careerFacts?.league?.statsSource, 'manager_history_overlay');
+});
+
 test('normalizer captures club-focused contracts, growth, ranking, and transfer activity', () => {
   const candidate = normalizePs4Save({ tables: {
     career_users: [{ seasoncount: 2, clubteamid: 10, leagueid: 20 }], career_managerinfo: [{ clubteamid: 10, playersreleasedthisseason: 2, boardconfidence: 4 }],
