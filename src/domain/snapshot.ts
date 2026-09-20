@@ -6,6 +6,7 @@ export const SNAPSHOT_SCHEMA_VERSION = 1;
 
 export interface ResolvedName {
   readonly display: string;
+  readonly full?: string;
   readonly source: 'edited' | 'primary' | 'fallback' | 'literal' | 'derived' | 'unresolved' | 'demo';
   readonly provisional: boolean;
   readonly resolverVersion: string;
