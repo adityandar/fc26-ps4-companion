@@ -146,3 +146,22 @@ See [`docs/architecture.md`](docs/architecture.md) for the system design, import
 The main parser remains an external runtime dependency. Its use and the other research references are recorded in [`REFERENCE_SOURCES.json`](REFERENCE_SOURCES.json).
 
 Historical Python/catalog flows remain under [`legacy/`](legacy/) for reference only and are not part of the production runtime.
+
+## References and attribution
+
+This project is an independent read-only PS4 companion application. It uses the following projects and research references:
+
+- [EAFC26-DataHub / fc26companion](https://github.com/ismailoksuz/EAFC26-DataHub) — primary parser/runtime reference for FC26 save database tables, player names, competition labels, and career view-model semantics. The application pins and loads its parser modules at revision `0e1d32a87c9947be681803cd506bc543f912cfd8`.
+- [Apollo Save Tool PS4 documentation](https://github.com/bucanero/apollo-ps4/blob/main/docs/usage.md) — documentation for exporting decrypted PS4 save data.
+- [FC26 Save Parser](https://github.com/mhirst1992/fc26-save-parser) and its [README](https://github.com/mhirst1992/fc26-save-parser/blob/main/README.md) — reference for `fifa_ng_db`, table-directory structure, signatures, CZUM field meanings, and FC26 PC save research.
+- [FC26 Companion](https://github.com/srikz4/fc26companion) — comparative reference for read-only Manager Career presentation and career data concepts.
+- [FIFA Career Save Parser](https://github.com/sammygriffiths/fifa-career-save-parser) — historical reference for FIFA Career Mode table and field conventions.
+- [SoccerGaming FIFA 18 reverse-engineering thread](https://soccergaming.com/forums/threads/fifa-18-save-editing-thread.6465621/) — historical research on career tables, players, teams, and internal database structures.
+- [EAFC26-DataHub player dataset](https://github.com/ismailoksuz/EAFC26-DataHub) — player-name and game-data reference used through the Companion parser boundary.
+- [Basche14 EAFC26 dataset](https://github.com/Basche14/EAFC26/blob/main/ea_fc26_players.csv) — optional fallback player-data reference.
+- [Kaggle EAFC26 Player Database](https://www.kaggle.com/datasets/flynn28/eafc26-player-database) — optional fallback research dataset, subject to its own license and terms.
+- [FUT.GG player reference](https://www.fut.gg/players/269357-nicola-valente/26-269357/) — targeted external cross-check for player ID `269357`.
+- [Reddit PS4 Homebrew discussion](https://www.reddit.com/r/ps4homebrew/comments/1shxy4j/fc_26_career_mode_crashing_after_few_saves/) — community context for FC26 PS4 Career Mode and Apollo save behavior.
+- [Reddit PS4 Homebrew FC24 save discussion](https://www.reddit.com/r/ps4homebrew/comments/1ef2jyq) — community reference for PS4 save structure and PC-data comparison context.
+
+Attribution does not imply that these projects endorse this application. Their code, data, documentation, and licenses remain owned by their respective authors. The complete machine-readable reference list is maintained in [`REFERENCE_SOURCES.json`](REFERENCE_SOURCES.json). External datasets are optional and are only used for name/data fallback or cross-checking; the original save remains the authoritative source for imported snapshot values.
