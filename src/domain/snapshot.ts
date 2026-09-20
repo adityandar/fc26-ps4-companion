@@ -24,6 +24,13 @@ export interface PlayerState {
   readonly nationality: number | null;
   readonly contractUntil: number | null;
   readonly wage: number | null;
+  readonly contractDurationMonths?: number | null;
+  readonly contractStatus?: number | null;
+  readonly playerRole?: number | null;
+  readonly contractDate?: number | null;
+  readonly lastStatusChangeDate?: number | null;
+  readonly signOnBonus?: number | null;
+  readonly performanceBonusValue?: number | null;
   readonly jerseyNumber: number | null;
   readonly leagueAppearances: number | null;
   readonly leagueGoals: number | null;
