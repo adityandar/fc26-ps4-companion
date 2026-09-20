@@ -30,6 +30,11 @@ export function compareSnapshots(a: Snapshot, b: Snapshot): ComparisonResult {
   const beforeTransfers = a.careerFacts?.transfers ?? []; const afterTransfers = b.careerFacts?.transfers ?? [];
   const beforeTransferKeys = new Set(beforeTransfers.map(transferKey)); const afterTransferKeys = new Set(afterTransfers.map(transferKey));
   const addedTransfers = afterTransfers.filter((transfer) => !beforeTransferKeys.has(transferKey(transfer))); const removedTransfers = beforeTransfers.filter((transfer) => !afterTransferKeys.has(transferKey(transfer)));
-  const result = { snapshotA: a.id, snapshotB: b.id, careerCompatible: true as const, players: { joined, departed, updated }, academy: { added: [...afterAcademy].filter((id) => !beforeAcademy.has(id)).length, removed: [...beforeAcademy].filter((id) => !afterAcademy.has(id)).length }, transfers: { added: addedTransfers, removed: removedTransfers }, summary: { playersJoined: joined.length, playersDeparted: departed.length, playersUpdated: updated.length, transfersAdded: addedTransfers.length, transfersRemoved: removedTransfers.length } };
+  const beforeResults = a.careerFacts?.fixtureEvidence?.latestResults ?? [];
+  const afterResults = b.careerFacts?.fixtureEvidence?.latestResults ?? [];
+  const resultKey = (item: Record<string, unknown>) => [item.date, item.homeTeamId, item.awayTeamId, item.homeGoals, item.awayGoals, item.leagueId].join(':');
+  const beforeResultKeys = new Set(beforeResults.map((item) => resultKey(item as unknown as Record<string, unknown>)));
+  const addedResults = afterResults.filter((item) => !beforeResultKeys.has(resultKey(item as unknown as Record<string, unknown>))) as unknown as Record<string, unknown>[];
+  const result = { snapshotA: a.id, snapshotB: b.id, careerCompatible: true as const, players: { joined, departed, updated }, academy: { added: [...afterAcademy].filter((id) => !beforeAcademy.has(id)).length, removed: [...beforeAcademy].filter((id) => !afterAcademy.has(id)).length }, transfers: { added: addedTransfers, removed: removedTransfers }, fixtures: { addedResults, source: addedResults.length ? 'mrni' : null }, summary: { playersJoined: joined.length, playersDeparted: departed.length, playersUpdated: updated.length, transfersAdded: addedTransfers.length, transfersRemoved: removedTransfers.length, fixturesAdded: addedResults.length } };
   return result;
 }

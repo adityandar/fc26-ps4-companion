@@ -39,5 +39,6 @@ export interface ComparisonResult {
   };
   readonly academy: { readonly added: number; readonly removed: number };
   readonly transfers: { readonly added: readonly TransferActivity[]; readonly removed: readonly TransferActivity[] };
+  readonly fixtures: { readonly addedResults: readonly Record<string, unknown>[]; readonly source: string | null };
   readonly summary: Readonly<Record<string, number>>;
 }
