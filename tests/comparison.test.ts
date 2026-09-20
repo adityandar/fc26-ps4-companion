@@ -14,6 +14,11 @@ test('compares arbitrary snapshots live and suppresses unchanged fields', () => 
   assert.equal(result.players.joined.length, 1); assert.equal(result.players.updated[0]?.changes[0]?.field, 'overall');
 });
 
+test('compares contract metadata when it changes', () => {
+  const result = compareSnapshots(snapshot('a', 'career', [{ contractDurationMonths: 12, playerRole: 2 }]), snapshot('b', 'career', [{ contractDurationMonths: 24, playerRole: 3 }]));
+  assert.deepEqual(result.players.updated[0]?.changes.map((change) => change.field), ['contractDurationMonths', 'playerRole']);
+});
+
 test('rejects cross-career comparison', () => {
   assert.throws(() => compareSnapshots(snapshot('a', 'one', []), snapshot('b', 'two', [])), IncompatibleCareerError);
 });

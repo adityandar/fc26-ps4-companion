@@ -177,12 +177,26 @@ Career facts currently include:
 - active league standings;
 - record scorelines where available.
 
+Club-focused facts are selected from the current managed club and are kept separate from generic player metadata:
+
+- `career_managerhistory`: season record, league/team IDs, results, points, table position, objectives, and biggest buy/sell labels and amounts;
+- `career_managerinfo` and `career_users`: manager context, earnings, wage, board/reputation fields, and current club identity;
+- `career_playercontract`: contract duration/status, role, wage, dates, and bonuses for players in the current squad;
+- `career_playergrowthuserseason`: current-season overall and selected attribute values for players present in the snapshot;
+- `career_squadranking`: current and previous squad overall values, retained as raw numeric values until scale semantics are verified;
+- `career_presignedcontract`: incoming/outgoing offer activity linked to the managed club.
+
+The following audited tables are intentionally excluded from the current product scope: `previousteam`, `career_playerlastgrowth`, and `career_playermatchratinghistory`. They may be revisited only when a concrete manager/club dashboard use case and field semantics are established.
+
+The view page displays the facts from one snapshot. The comparison page derives differences live between any two snapshots; no comparison result is written back into the stored snapshot.
+
 Raw values are not silently guessed. For example:
 
 - manager budget `0` is shown as unavailable;
 - manager history position `0` is treated as unavailable rather than a valid table position;
 - competition `stageid` values remain labeled internal stage codes unless a verified mapping exists;
 - `stageid = -1` is shown as not started.
+- opaque IDs such as `leagueId`, `teamId`, `contractType`, and `playerRole` remain codes unless a verified lookup is available.
 
 ## Storage layout
 
