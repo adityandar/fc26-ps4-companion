@@ -8,3 +8,6 @@
 .toggle{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;margin-bottom:14px}.toggle input{accent-color:var(--accent)}
 .player-name{position:relative;display:inline-block;cursor:help}.player-name::after{content:attr(data-tooltip);position:absolute;left:0;bottom:calc(100% + 8px);z-index:20;display:none;padding:7px 9px;border:1px solid var(--line);border-radius:3px;background:var(--ink);color:#eef5f6;font-size:11px;white-space:nowrap;box-shadow:0 8px 18px #0008}.player-name:hover::after{display:block}
 .column-filters{display:none;gap:10px;padding:12px;border-bottom:1px solid var(--line);background:#142129;grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}.column-filters.visible{display:grid}.column-filters label{display:grid;gap:5px;color:var(--muted);font-size:11px}.column-filters .column-filter{margin:0}
+.copy-button, .player-id-copy { appearance: none; border: 0; background: transparent; color: inherit; font: inherit; padding: 0; cursor: pointer; }
+.copy-button:hover, .player-id-copy:hover { color: var(--accent, #d8e34f); }
+.player-id-copy { opacity: .65; }
