@@ -46,6 +46,8 @@ export function createApiServer(repository: SnapshotRepository, port = 4132, hos
         const snapshot = importer.commit(preview, careerIdValue, { seasonLabel, checkpoint, note: typeof body.note === 'string' ? body.note : undefined }); previews.delete(token);
         return json(res, 201, { snapshotId: snapshot.id, careerId: snapshot.careerId, sourceSha256: snapshot.sourceSha256 });
       }).catch((error) => json(res, 400, { error: error instanceof Error ? error.message : 'import commit failed' }));
+      const deleteSnapshotMatch = /^\/api\/snapshots\/([^/]+)$/.exec(url.pathname);
+      if (req.method === 'DELETE' && deleteSnapshotMatch) { const deleted = repository.deleteSnapshot(snapshotId(deleteSnapshotMatch[1])); return json(res, deleted ? 200 : 404, { deleted }); }
       if (req.method !== 'GET') return json(res, 405, { error: 'method not allowed' });
       if (url.pathname === '/' || /^\/(index|import|view|compare)\.html$/.test(url.pathname)) {
         const page = existsSync(join(webRoot, 'index.html')) && existsSync(join(webRoot, 'assets')) ? 'index.html' : (url.pathname === '/' ? 'index.html' : url.pathname.slice(1));

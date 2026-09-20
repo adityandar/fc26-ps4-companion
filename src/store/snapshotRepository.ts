@@ -13,6 +13,7 @@ export interface SnapshotRepository {
   getSnapshot(id: SnapshotId): Snapshot | null;
   listSnapshots(career: CareerId): readonly Snapshot[];
   findByHash(career: CareerId, sourceSha256: string): Snapshot | null;
+  deleteSnapshot(id: SnapshotId): boolean;
 }
 
 function rowToSnapshot(row: Record<string, unknown>, players: readonly Record<string, unknown>[], academy: readonly Record<string, unknown>[], evidence: readonly Record<string, unknown>[]): Snapshot {
@@ -63,6 +64,19 @@ export function createSnapshotRepository(db: Database.Database): SnapshotReposit
     findByHash(career, sourceSha256) {
       const row = db.prepare('SELECT id FROM snapshot WHERE career_id = ? AND source_sha256 = ?').get(career, sourceSha256) as { id: string } | undefined;
       return row ? load(snapshotId(row.id)) : null;
+    },
+    deleteSnapshot(id) {
+      const remove = db.transaction(() => {
+        const exists = db.prepare('SELECT 1 FROM snapshot WHERE id = ?').get(id);
+        if (!exists) return false;
+        db.prepare('DELETE FROM snapshot_player WHERE snapshot_id = ?').run(id);
+        db.prepare('DELETE FROM snapshot_academy_player WHERE snapshot_id = ?').run(id);
+        db.prepare('DELETE FROM field_evidence WHERE snapshot_id = ?').run(id);
+        db.prepare('DELETE FROM snapshot_note WHERE snapshot_id = ?').run(id);
+        db.prepare('DELETE FROM snapshot WHERE id = ?').run(id);
+        return true;
+      });
+      return remove();
     },
   };
 }
