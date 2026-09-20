@@ -1,7 +1,7 @@
 import type { CareerId } from '../domain/ids.js';
 import type { Snapshot, SnapshotCandidate } from '../domain/snapshot.js';
 import { ObjectStore, type StagedObject } from './objectStore.js';
-import { parseAndNormalizeSave } from './saveParser.js';
+import { parseAndNormalizeSave, parseRawSave, type ParsedRawDocument } from './saveParser.js';
 import type { SnapshotRepository } from '../store/snapshotRepository.js';
 
 export interface ImportPreview { readonly staged: StagedObject; readonly candidate: SnapshotCandidate; readonly careerHint: string }
@@ -20,6 +20,10 @@ export class ImportService {
     const staged = await this.objects.stageBytes(filename, bytes);
     const candidate = await parseAndNormalizeSave(staged.objectPath, this.companionRoot);
     return { staged, candidate, careerHint: `${candidate.careerHint.managerName ?? 'Unknown manager'} · ${candidate.careerHint.clubName ?? 'Unknown club'}` };
+  }
+
+  async rawExport(objectPath: string): Promise<ParsedRawDocument> {
+    return parseRawSave(objectPath, this.companionRoot);
   }
 
   commit(preview: ImportPreview, choice: CareerChoice, metadata: { readonly seasonLabel: string; readonly checkpoint: string; readonly note?: string }): Snapshot {

@@ -4,6 +4,23 @@ import { loadCompanionModules } from '../upstream/companion.js';
 import type { SnapshotCandidate } from '../domain/snapshot.js';
 import { normalizePs4Save } from './ps4Normalizer.js';
 
+export interface ParsedRawDocument {
+  readonly _meta: { readonly kind: 'parsed-raw'; readonly sourceFile: string; readonly parserVersion: string };
+  readonly tables: Record<string, Record<string, unknown>[]>;
+}
+
+export function rawExportDocument(parsed: { tables: Record<string, Record<string, unknown>[]> }, sourceFile: string, parserVersion: string): ParsedRawDocument {
+  return { _meta: { kind: 'parsed-raw', sourceFile, parserVersion }, tables: parsed.tables };
+}
+
+export async function parseRawSave(savePath: string, companionRoot = process.env.FC26_COMPANION_ROOT): Promise<ParsedRawDocument> {
+  if (!companionRoot) throw new Error('FC26_COMPANION_ROOT is required');
+  const modules = await loadCompanionModules(companionRoot);
+  const meta = modules.loadDbMeta(join(companionRoot, 'data/fifa_ng_db-meta.xml'));
+  const parsed = modules.parseSave(await readFile(savePath), meta) as { tables: Record<string, Record<string, unknown>[]> };
+  return rawExportDocument(parsed, savePath.split(/[\\/]/).pop() ?? 'DATA', 'companion-pinned-0e1d32a');
+}
+
 export async function parseAndNormalizeSave(savePath: string, companionRoot = process.env.FC26_COMPANION_ROOT): Promise<SnapshotCandidate> {
   if (!companionRoot) throw new Error('FC26_COMPANION_ROOT is required');
   const modules = await loadCompanionModules(companionRoot);
