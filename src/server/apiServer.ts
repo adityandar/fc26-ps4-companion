@@ -38,7 +38,11 @@ export function createApiServer(repository: SnapshotRepository, port = 4132, hos
         const token = typeof body.token === 'string' ? body.token : ''; const entry = previews.get(token); const preview = entry?.preview;
         if (!entry || !preview || entry.expiresAt < Date.now()) { previews.delete(token); return json(res, 404, { error: 'preview expired or not found' }); }
         const seasonLabel = typeof body.seasonLabel === 'string' ? body.seasonLabel : 'unknown'; const checkpoint = typeof body.checkpoint === 'string' ? body.checkpoint : 'custom';
-        const careerIdValue = typeof body.careerId === 'string' && body.careerId ? { kind: 'existing' as const, id: body.careerId as never } : { kind: 'new' as const, label: typeof body.careerLabel === 'string' && body.careerLabel ? body.careerLabel : preview.careerHint };
+        const requestedCareer = typeof body.careerId === 'string' && body.careerId ? { kind: 'existing' as const, id: body.careerId as never } : null;
+        const fallbackCareerLabel = preview.careerHint || 'Imported career';
+        const careerLabel = typeof body.careerLabel === 'string' && body.careerLabel.trim() ? body.careerLabel.trim() : fallbackCareerLabel;
+        const matchingCareer = !requestedCareer ? repository.listCareers().find((career) => career.label === careerLabel) : undefined;
+        const careerIdValue = requestedCareer ?? (matchingCareer ? { kind: 'existing' as const, id: matchingCareer.id } : { kind: 'new' as const, label: careerLabel });
         const snapshot = importer.commit(preview, careerIdValue, { seasonLabel, checkpoint, note: typeof body.note === 'string' ? body.note : undefined }); previews.delete(token);
         return json(res, 201, { snapshotId: snapshot.id, careerId: snapshot.careerId, sourceSha256: snapshot.sourceSha256 });
       }).catch((error) => json(res, 400, { error: error instanceof Error ? error.message : 'import commit failed' }));
