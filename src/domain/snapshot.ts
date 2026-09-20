@@ -22,6 +22,8 @@ export interface PlayerState {
   readonly height: number | null;
   readonly weight: number | null;
   readonly nationality: number | null;
+  readonly nationalityName?: string | null;
+  readonly preferredFoot?: number | null;
   readonly contractUntil: number | null;
   readonly wage: number | null;
   readonly contractDurationMonths?: number | null;

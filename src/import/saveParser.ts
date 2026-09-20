@@ -36,11 +36,14 @@ export async function parseAndNormalizeSave(savePath: string, companionRoot = pr
     const match = line.match(/^([^,]+),(.*)$/);
     if (match?.[1] && match[2]) competitionMap.set(match[1].trim(), match[2].trim());
   }
+  const nationalityMap = new Map<number, string>();
+  const nationalityCsv = await readFile(join(companionRoot, 'data/nations_fc26.csv'), 'utf8');
+  for (const line of nationalityCsv.split(/\r?\n/).slice(1)) { const match = line.match(/^(\d+),(.*)$/); if (match) nationalityMap.set(Number(match[1]), match[2].trim()); }
   const bytes = await readFile(savePath);
   const tables = parsed.tables;
   const leagueOfTeam = (teamId: number): number | null => { const row = tables.leagueteamlinks?.find((item) => item.teamid === teamId); return typeof row?.leagueid === 'number' ? row.leagueid : null; };
   const fixtures = modules.readFixtureLedger(bytes) as Array<Record<string, number | null>> | null;
   const latestResults = modules.readLatestResults(bytes, leagueOfTeam, (id) => tables.players?.some((row) => row.playerid === id) ?? false) as Array<Record<string, number | null>> | null;
   const fixtureEvidence: FixtureEvidence = { source: 'companion-fixture-ledger', fixtures: (fixtures ?? []).map((row) => ({ date: row.date as number, kickoff: row.kickoff as number | null, competitionId: row.comp as number, slotA: row.slotA as number, slotB: row.slotB as number, goalsA: row.goalsA as number | null, goalsB: row.goalsB as number | null })), latestResults: (latestResults ?? []).map((row) => ({ date: row.date as number, homeTeamId: row.homeTeamId as number, awayTeamId: row.awayTeamId as number, homeGoals: row.homeGoals as number, awayGoals: row.awayGoals as number, leagueId: row.leagueId as number, standoutPlayerId: row.standoutPlayerId as number | null })), fixtureCount: fixtures?.length ?? 0, resultCount: latestResults?.length ?? 0 };
-  return normalizePs4Save(parsed, { parserVersion: 'companion-pinned-0e1d32a', fixtureEvidence, competitionResolver: (code) => competitionMap.get(code) ?? null, nameResolver: (playerId) => ({ display: resolver.resolve(playerId).display, source: resolver.resolve(playerId).origin as 'primary', provisional: resolver.resolve(playerId).provisional, resolverVersion: 'companion-pinned-0e1d32a' }) });
+  return normalizePs4Save(parsed, { parserVersion: 'companion-pinned-0e1d32a', fixtureEvidence, nationalityResolver: (id) => id === null ? null : nationalityMap.get(id) ?? null, competitionResolver: (code) => competitionMap.get(code) ?? null, nameResolver: (playerId) => ({ display: resolver.resolve(playerId).display, source: resolver.resolve(playerId).origin as 'primary', provisional: resolver.resolve(playerId).provisional, resolverVersion: 'companion-pinned-0e1d32a' }) });
 }
