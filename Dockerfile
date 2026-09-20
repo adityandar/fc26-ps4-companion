@@ -1,9 +1,9 @@
-FROM node:20-bookworm-slim
+FROM node:22-bookworm-slim
 
 ARG COMPANION_REVISION=0e1d32a87c9947be681803cd506bc543f912cfd8
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends git ca-certificates \
+  && apt-get install -y --no-install-recommends git ca-certificates python3 make g++ \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

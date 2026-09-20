@@ -8,7 +8,7 @@ The app creates an immutable working copy, parses it through the pinned [`fc26co
 
 ### 1. Requirements
 
-- Node.js 20 or newer;
+- Node.js 22 or newer;
 - an Apollo Save Tool decrypted PS4 `DATA` file;
 - the pinned `fc26companion` reference checkout.
 

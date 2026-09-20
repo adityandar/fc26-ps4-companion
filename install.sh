@@ -10,8 +10,8 @@ command -v npm >/dev/null || { echo "npm is required." >&2; exit 1; }
 command -v git >/dev/null || { echo "git is required." >&2; exit 1; }
 
 node_major="$(node -p "process.versions.node.split('.')[0]")"
-if [ "$node_major" -lt 20 ]; then
-  echo "Node.js 20+ is required; found $(node --version)." >&2
+if [ "$node_major" -lt 22 ]; then
+  echo "Node.js 22+ is required; found $(node --version)." >&2
   exit 1
 fi
 
