@@ -1,4 +1,5 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { SnapshotId } from '../domain/ids.js';
@@ -18,7 +19,7 @@ async function requestJson(req: IncomingMessage): Promise<Record<string, unknown
   return JSON.parse(Buffer.concat(chunks).toString('utf8')) as Record<string, unknown>;
 }
 
-export function createApiServer(repository: SnapshotRepository, port = 4132, host = '127.0.0.1', webRoot = join(process.cwd(), 'web-v2'), importer?: ImportService) {
+export function createApiServer(repository: SnapshotRepository, port = 4132, host = '127.0.0.1', webRoot = existsSync(join(process.cwd(), 'web-v2', 'dist')) ? join(process.cwd(), 'web-v2', 'dist') : join(process.cwd(), 'web-v2'), importer?: ImportService) {
   const previews = new Map<string, { preview: ImportPreview; expiresAt: number }>();
   const server = createServer((req, res) => {
     try {
@@ -43,9 +44,10 @@ export function createApiServer(repository: SnapshotRepository, port = 4132, hos
       }).catch((error) => json(res, 400, { error: error instanceof Error ? error.message : 'import commit failed' }));
       if (req.method !== 'GET') return json(res, 405, { error: 'method not allowed' });
       if (url.pathname === '/' || /^\/(index|import|view|compare)\.html$/.test(url.pathname)) {
-        const page = url.pathname === '/' ? 'index.html' : url.pathname.slice(1);
+        const page = existsSync(join(webRoot, 'index.html')) && existsSync(join(webRoot, 'assets')) ? 'index.html' : (url.pathname === '/' ? 'index.html' : url.pathname.slice(1));
         return readFile(join(webRoot, page)).then((data) => { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' }); res.end(data); }).catch(() => json(res, 404, { error: 'web ui not found' }));
       }
+      if (url.pathname.startsWith('/assets/')) return readFile(join(webRoot, url.pathname.slice(1))).then((data) => { res.writeHead(200, { 'content-type': url.pathname.endsWith('.js') ? 'text/javascript; charset=utf-8' : 'text/css; charset=utf-8', 'cache-control': 'no-store' }); res.end(data); }).catch(() => json(res, 404, { error: 'asset not found' }));
       if (url.pathname === '/app.js' || url.pathname === '/styles.css') {
         const contentType = url.pathname.endsWith('.js') ? 'text/javascript; charset=utf-8' : 'text/css; charset=utf-8';
         return readFile(join(webRoot, url.pathname.slice(1))).then((data) => { res.writeHead(200, { 'content-type': contentType, 'cache-control': 'no-store' }); res.end(data); }).catch(() => json(res, 404, { error: 'asset not found' }));
