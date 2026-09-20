@@ -59,7 +59,7 @@ test('normalizer captures club-focused contracts, growth, ranking, and transfer 
     career_managerhistory: [{ season: 2, teamid: 10, leagueid: 20, games_played: 10, wins: 3, draws: 2, losses: 5, points: 11, tableposition: 4, bigbuyplayername: 'New Player', bigbuyamount: 1000, domestic_cup_objective: 2, domestic_cup_result: 1 }],
     career_playergrowthuserseason: [{ playerid: 7, overall: 71, acceleration: 80, finishing: 60 }], career_squadranking: [{ playerid: 7, curroverall: 710, lastoverall: 700 }],
     career_presignedcontract: [{ playerid: 8, teamid: 10, offerteamid: 11, offeredfee: 2000, offeredwage: 900, signeddate: 20260103, completedate: 20260701, offeredcontracttype: 5, iscomingthisseason: 1, isloanbuy: 0, isdirectapproach: 1 }],
-    persistent_events: [{ eventid: 5, eventdate: 20260701, team1id: 11, team2id: 10, player1id: 8 }],
+    persistent_events: [{ eventid: 5, eventdate: 20260701, team1id: 11, team2id: 10, player1id: 8 }, { eventid: 5, eventdate: 20260702, team1id: 12, team2id: 13, player1id: 9 }],
   } }, { parserVersion: 'test', nameResolver: (playerId) => ({ display: `Player #${playerId}`, source: 'unresolved', provisional: false, resolverVersion: 'test' }) });
   assert.equal(candidate.players[0]?.contractDurationMonths, 24);
   assert.equal(candidate.careerFacts?.seasons[0]?.bigBuy?.amount, 1000);
@@ -70,4 +70,5 @@ test('normalizer captures club-focused contracts, growth, ranking, and transfer 
   assert.equal(candidate.careerFacts?.transferEvents?.[0]?.fromTeamName, 'Rival FC');
   assert.equal(candidate.careerFacts?.transferEvents?.[0]?.toTeamName, 'Test FC');
   assert.equal(candidate.careerFacts?.transferEvents?.[0]?.playerName, 'Player #8');
+  assert.equal(candidate.careerFacts?.transferEvents?.length, 2);
 });
