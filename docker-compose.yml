@@ -1,0 +1,11 @@
+services:
+  fc26-companion:
+    build:
+      context: .
+      args:
+        COMPANION_REVISION: 0e1d32a87c9947be681803cd506bc543f912cfd8
+    ports:
+      - "4132:4132"
+    volumes:
+      - ./data-v2:/app/data-v2
+    restart: unless-stopped

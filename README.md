@@ -25,6 +25,27 @@ Open [http://localhost:4132](http://localhost:4132).
 
 The normal development command builds the React frontend and starts the local server. Runtime data is created under `data-v2/`, which is ignored by Git.
 
+### Docker deployment
+
+On an Ubuntu server with Docker Compose:
+
+```bash
+git clone https://github.com/adityandar/fc26-ps4-companion.git
+cd fc26-ps4-companion
+docker compose up -d --build
+```
+
+Open `http://SERVER_IP:4132`. The image clones and pins the required `fc26companion` revision during build. SQLite and immutable working copies persist in the local `data-v2/` volume.
+
+For a non-Docker installation, run the setup script once:
+
+```bash
+./install.sh
+npm run dev
+```
+
+The script clones or updates `public-reference/fc26companion`, checks out the pinned revision, installs both projects, and builds the frontend. It does not touch save files.
+
 ### 3. Import a save
 
 1. Open **Import**.
