@@ -11,3 +11,5 @@
 .copy-button, .player-id-copy { appearance: none; border: 0; background: transparent; color: inherit; font: inherit; padding: 0; cursor: pointer; }
 .copy-button:hover, .player-id-copy:hover { color: var(--accent, #d8e34f); }
 .player-id-copy { opacity: .65; }
+
+.player-attributes .attribute-groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.player-attributes .attribute-groups>.section-block{margin-top:0;padding:14px;background:var(--panel);border:1px solid var(--line)}.player-attributes .attribute-groups .label{margin-bottom:10px}.player-attributes .facts-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.player-attributes .metric{padding:10px 12px}.player-attributes .metric span{font-size:11px;margin-bottom:3px}.player-attributes .metric strong{font-size:20px}@media(max-width:850px){.player-attributes .attribute-groups{grid-template-columns:1fr}}
