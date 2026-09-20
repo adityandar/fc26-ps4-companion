@@ -10,6 +10,8 @@ export interface CompanionModules {
   readonly createNameResolver: (...args: unknown[]) => unknown;
   readonly loadNameTable: (path: string) => unknown;
   readonly deriveNameIds: (...args: unknown[]) => unknown;
+  readonly readFixtureLedger: (bytes: Buffer) => unknown;
+  readonly readLatestResults: (bytes: Buffer, leagueOfTeam: (teamId: number) => number | null, isPlayerId?: (id: number) => boolean) => unknown;
 }
 
 export async function loadCompanionModules(root = process.env.FC26_COMPANION_ROOT): Promise<CompanionModules> {
@@ -18,12 +20,14 @@ export async function loadCompanionModules(root = process.env.FC26_COMPANION_ROO
   const meta = join(root, 'src/parser/meta.ts');
   const names = join(root, 'src/names/nameTable.ts');
   const derive = join(root, 'src/names/deriveNameTable.ts');
-  await Promise.all([parser, meta, names, derive].map((path) => access(path)));
-  const [parserModule, metaModule, namesModule, deriveModule] = await Promise.all([
+  const fixtures = join(root, 'src/parser/fixtures.ts');
+  await Promise.all([parser, meta, names, derive, fixtures].map((path) => access(path)));
+  const [parserModule, metaModule, namesModule, deriveModule, fixtureModule] = await Promise.all([
     import(pathToFileURL(parser).href),
     import(pathToFileURL(meta).href),
     import(pathToFileURL(names).href),
     import(pathToFileURL(derive).href),
+    import(pathToFileURL(fixtures).href),
   ]);
   return {
     parseSave: parserModule.parseSave,
@@ -31,5 +35,7 @@ export async function loadCompanionModules(root = process.env.FC26_COMPANION_ROO
     createNameResolver: namesModule.createNameResolver,
     loadNameTable: namesModule.loadNameTable,
     deriveNameIds: deriveModule.deriveNameIds,
+    readFixtureLedger: fixtureModule.readFixtureLedger,
+    readLatestResults: fixtureModule.readLatestResults,
   };
 }
