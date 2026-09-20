@@ -3,3 +3,4 @@
  .delta-positive { color: #65d391; font-weight: 700; }
  .delta-negative { color: #ff7777; font-weight: 700; }
  .delta-neutral { color: var(--muted, #9aa3b2); }
+.column-filters{display:none;gap:10px;padding:12px;border-bottom:1px solid var(--line);background:#142129;grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}.column-filters.visible{display:grid}.column-filters label{display:grid;gap:5px;color:var(--muted);font-size:11px}.column-filters .column-filter{margin:0}

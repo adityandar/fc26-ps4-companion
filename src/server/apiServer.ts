@@ -19,7 +19,7 @@ async function requestJson(req: IncomingMessage): Promise<Record<string, unknown
   return JSON.parse(Buffer.concat(chunks).toString('utf8')) as Record<string, unknown>;
 }
 
-export function createApiServer(repository: SnapshotRepository, port = 4132, host = '127.0.0.1', webRoot = existsSync(join(process.cwd(), 'web-v2', 'dist')) ? join(process.cwd(), 'web-v2', 'dist') : join(process.cwd(), 'web-v2'), importer?: ImportService) {
+export function createApiServer(repository: SnapshotRepository, port = 4132, host = '127.0.0.1', webRoot = existsSync(join(process.cwd(), 'web-v2', 'dist')) ? join(process.cwd(), 'web-v2', 'dist') : join(process.cwd(), 'web-v2'), importer?: ImportService, currency = 'USD') {
   const previews = new Map<string, { preview: ImportPreview; expiresAt: number }>();
   const server = createServer((req, res) => {
     try {
@@ -54,10 +54,22 @@ export function createApiServer(repository: SnapshotRepository, port = 4132, hos
         return readFile(join(webRoot, url.pathname.slice(1))).then((data) => { res.writeHead(200, { 'content-type': contentType, 'cache-control': 'no-store' }); res.end(data); }).catch(() => json(res, 404, { error: 'asset not found' }));
       }
       if (url.pathname === '/api/careers') return json(res, 200, repository.listCareers());
+      if (url.pathname === '/api/config') return json(res, 200, { currency });
       const careerMatch = /^\/api\/careers\/([^/]+)\/snapshots$/.exec(url.pathname);
       if (careerMatch) return json(res, 200, repository.listSnapshots(careerId(careerMatch[1])));
       const snapshotMatch = /^\/api\/snapshots\/([^/]+)$/.exec(url.pathname);
       if (snapshotMatch) { const found = repository.getSnapshot(snapshotId(snapshotMatch[1])); return found ? json(res, 200, found) : json(res, 404, { error: 'snapshot not found' }); }
+      const rawExportMatch = /^\/api\/snapshots\/([^/]+)\/export\.raw\.json$/.exec(url.pathname);
+      if (rawExportMatch) {
+        const found = repository.getSnapshot(snapshotId(rawExportMatch[1]));
+        if (!found) return json(res, 404, { error: 'snapshot not found' });
+        if (!importer) return json(res, 503, { error: 'raw export is unavailable' });
+        return importer.rawExport(found.objectPath).then((data) => {
+          const body = JSON.stringify(data, null, 2);
+          res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'content-disposition': `attachment; filename="${found.sourceFilename}.raw.json"` });
+          res.end(body);
+        });
+      }
       const exportMatch = /^\/api\/snapshots\/([^/]+)\/export\.(json|csv)$/.exec(url.pathname);
       if (exportMatch) { const found = repository.getSnapshot(snapshotId(exportMatch[1])); if (!found) return json(res, 404, { error: 'snapshot not found' }); if (exportMatch[2] === 'json') { const data = JSON.stringify(found, null, 2); res.writeHead(200, { 'content-type': 'application/json', 'content-disposition': `attachment; filename="${found.sourceFilename}.json"` }); return res.end(data); } const rows = [['player_id', 'name', 'name_source', 'position_codes', 'overall', 'potential', 'height_cm', 'contract_until', 'wage', 'jersey_number'], ...found.players.map((player) => [player.playerId, player.name.display, player.name.source, player.preferredPositions.join('|'), player.overall, player.potential, player.height, player.contractUntil, player.wage, player.jerseyNumber])]; const data = rows.map((row) => row.map(csvValue).join(',')).join('\n'); res.writeHead(200, { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': `attachment; filename="${found.sourceFilename}.csv"` }); return res.end(data); }
       if (url.pathname === '/api/compare') {

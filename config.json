@@ -1,0 +1,8 @@
+{
+  "companionRoot": "../public-reference/fc26companion",
+  "objectRoot": "data-v2/objects",
+  "databasePath": "data-v2/companion.sqlite",
+  "host": "127.0.0.1",
+  "port": 4132,
+  "currency": "USD"
+}

@@ -12,5 +12,5 @@ const host = config.host;
 const db = openDatabase(databasePath);
 const repository = createSnapshotRepository(db);
 const importer = config.companionRoot ? new ImportService(new ObjectStore(config.objectRoot), repository, config.companionRoot) : undefined;
-const app = createApiServer(repository, port, host, undefined, importer);
+const app = createApiServer(repository, port, host, undefined, importer, config.currency);
 app.listen().then((url) => console.log(`FC26 PS4 Companion: ${url} · parser=${config.companionRoot || 'not configured'}`));
