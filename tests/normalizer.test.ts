@@ -53,12 +53,13 @@ test('normalizer extracts the active league table from league links', () => {
 test('normalizer captures club-focused contracts, growth, ranking, and transfer activity', () => {
   const candidate = normalizePs4Save({ tables: {
     career_users: [{ seasoncount: 2, clubteamid: 10, leagueid: 20 }], career_managerinfo: [{ clubteamid: 10, playersreleasedthisseason: 2, boardconfidence: 4 }],
-    teams: [{ teamid: 10, teamname: 'Test FC' }], leagues: [{ leagueid: 20, leaguename: 'Test League' }], leagueteamlinks: [],
+    teams: [{ teamid: 10, teamname: 'Test FC' }, { teamid: 11, teamname: 'Rival FC' }], leagues: [{ leagueid: 20, leaguename: 'Test League' }], leagueteamlinks: [],
     teamplayerlinks: [{ teamid: 10, playerid: 7, position: 1 }], players: [{ playerid: 7, overallrating: 70, potential: 75 }],
     career_playercontract: [{ playerid: 7, teamid: 10, wage: 1000, duration_months: 24, contract_status: 0, playerrole: 2, contract_date: 20260101, last_status_change_date: 20260102, signon_bonus: 50, performancebonusvalue: 10 }], career_youthplayers: [],
     career_managerhistory: [{ season: 2, teamid: 10, leagueid: 20, games_played: 10, wins: 3, draws: 2, losses: 5, points: 11, tableposition: 4, bigbuyplayername: 'New Player', bigbuyamount: 1000, domestic_cup_objective: 2, domestic_cup_result: 1 }],
     career_playergrowthuserseason: [{ playerid: 7, overall: 71, acceleration: 80, finishing: 60 }], career_squadranking: [{ playerid: 7, curroverall: 710, lastoverall: 700 }],
     career_presignedcontract: [{ playerid: 8, teamid: 10, offerteamid: 11, offeredfee: 2000, offeredwage: 900, signeddate: 20260103, completedate: 20260701, offeredcontracttype: 5, iscomingthisseason: 1, isloanbuy: 0, isdirectapproach: 1 }],
+    persistent_events: [{ eventid: 5, eventdate: 20260701, team1id: 11, team2id: 10, player1id: 8 }],
   } }, { parserVersion: 'test', nameResolver: (playerId) => ({ display: `Player #${playerId}`, source: 'unresolved', provisional: false, resolverVersion: 'test' }) });
   assert.equal(candidate.players[0]?.contractDurationMonths, 24);
   assert.equal(candidate.careerFacts?.seasons[0]?.bigBuy?.amount, 1000);
@@ -66,4 +67,6 @@ test('normalizer captures club-focused contracts, growth, ranking, and transfer 
   assert.equal(candidate.careerFacts?.playerGrowth?.[0]?.overall, 71);
   assert.equal(candidate.careerFacts?.squadRanking?.[0]?.currentOverall, 710);
   assert.equal(candidate.careerFacts?.transfers?.[0]?.offeredFee, 2000);
+  assert.equal(candidate.careerFacts?.transferEvents?.[0]?.fromTeamName, 'Rival FC');
+  assert.equal(candidate.careerFacts?.transferEvents?.[0]?.toTeamName, 'Test FC');
 });
