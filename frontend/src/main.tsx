@@ -7,7 +7,7 @@ type AnyRecord = Record<string, any>;
 const get = async <T,>(path: string, init?: RequestInit): Promise<T> => { const response = await fetch(path, init); const body = await response.json(); if (!response.ok) throw new Error(body.error ?? `Request failed (${response.status})`); return body; };
 const value = (item: unknown) => item === null || item === undefined || item === '' ? '—' : String(item);
 const roleName = (code: unknown) => ({ '-1': 'None', '0': 'Reserve', '1': 'Crucial', '2': 'Important', '3': 'Rotation', '4': 'Sporadic', '5': 'Prospect' } as Record<string, string>)[String(code)] ?? value(code);
-const money = (item: unknown, currency: string) => typeof item === 'number' ? new Intl.NumberFormat(undefined, { style: 'currency', currency, maximumFractionDigits: 0 }).format(item) : value(item);
+const money = (item: unknown, currency?: string) => typeof item === 'number' ? new Intl.NumberFormat(undefined, { style: 'currency', currency: currency || 'USD', maximumFractionDigits: 0 }).format(item) : value(item);
 function useAppConfig() { const [config, setConfig] = useState({ currency: 'USD' }); useEffect(() => { get<{ currency: string }>('/api/config').then(setConfig).catch(() => undefined); }, []); return config; }
 function Delta({ value: delta }: { value: unknown }) { const numberValue = typeof delta === 'number' ? delta : null; if (numberValue === null) return <span>—</span>; return <span className={numberValue > 0 ? 'delta-positive' : numberValue < 0 ? 'delta-negative' : 'delta-neutral'}>{numberValue > 0 ? '+' : ''}{numberValue}</span>; }
 
